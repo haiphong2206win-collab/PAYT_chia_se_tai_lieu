@@ -1,0 +1,104 @@
+.payt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  outline: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.payt-btn-sm {
+  padding: 6px 14px;
+  font-size: 0.84375rem;
+  height: 36px;
+}
+
+.payt-btn-md {
+  padding: 10px 20px;
+  font-size: 0.9375rem;
+  height: 44px;
+}
+
+.payt-btn-lg {
+  padding: 14px 28px;
+  font-size: 1rem;
+  height: 52px;
+}
+
+.payt-btn-full {
+  width: 100%;
+}
+
+/* Primary Button System */
+.payt-btn-primary {
+  background-color: var(--primary-orange);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.payt-btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-orange-hover);
+  box-shadow: var(--shadow-orange);
+}
+
+/* Secondary Button System */
+.payt-btn-secondary {
+  background-color: var(--white);
+  color: var(--primary-text);
+  border-color: var(--border-color);
+}
+
+.payt-btn-secondary:hover:not(:disabled) {
+  background-color: var(--warm-cream);
+  border-color: var(--border-hover);
+  color: var(--primary-orange-hover);
+}
+
+/* Outline Button System */
+.payt-btn-outline {
+  background-color: transparent;
+  color: var(--primary-orange);
+  border-color: var(--primary-orange);
+}
+
+.payt-btn-outline:hover:not(:disabled) {
+  background-color: var(--primary-orange-light);
+}
+
+/* Ghost Button System */
+.payt-btn-ghost {
+  background-color: transparent;
+  color: var(--secondary-text);
+}
+
+.payt-btn-ghost:hover:not(:disabled) {
+  background-color: var(--warm-cream-alt);
+  color: var(--primary-text);
+}
+
+/* Danger Button System */
+.payt-btn-danger {
+  background-color: var(--error-bg);
+  color: var(--error-color);
+  border-color: #FFCDD2;
+}
+
+.payt-btn-danger:hover:not(:disabled) {
+  background-color: var(--error-color);
+  color: var(--white);
+}
+
+.payt-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.payt-btn-icon {
+  flex-shrink: 0;
+}

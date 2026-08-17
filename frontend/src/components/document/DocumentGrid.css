@@ -1,0 +1,66 @@
+.payt-document-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.payt-grid-empty {
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.empty-icon-box {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+/* Skeleton Loading styles */
+.doc-card-skeleton {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 220px;
+}
+
+.skeleton-header {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background-color: #EDE6DC;
+}
+
+.skeleton-line {
+  height: 16px;
+  background-color: #EDE6DC;
+  border-radius: 4px;
+}
+
+.skeleton-line.lg { width: 85%; }
+.skeleton-line.sm { width: 40%; }
+
+.skeleton-footer {
+  height: 20px;
+  background-color: #EDE6DC;
+  border-radius: 4px;
+  margin-top: auto;
+}
+
+@media (max-width: 992px) {
+  .payt-document-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .payt-document-grid {
+    grid-template-columns: 1fr;
+  }
+}

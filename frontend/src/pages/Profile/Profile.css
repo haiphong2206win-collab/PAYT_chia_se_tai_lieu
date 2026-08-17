@@ -1,0 +1,335 @@
+.payt-profile-page {
+  padding-bottom: var(--space-16);
+}
+
+.profile-banner {
+  padding: var(--space-10) 0;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--space-8);
+}
+
+.profile-banner-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.profile-avatar-wrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.profile-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--white);
+  box-shadow: var(--shadow-md);
+}
+
+.avatar-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: var(--white);
+  border-radius: 50%;
+  padding: 2px;
+  display: flex;
+}
+
+.verified-icon {
+  color: var(--primary-orange);
+}
+
+.profile-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.profile-name {
+  font-size: 2.25rem;
+  line-height: 1.2;
+}
+
+.profile-email {
+  font-size: 0.9375rem;
+  color: var(--secondary-text);
+}
+
+.profile-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--primary-orange-hover);
+  background-color: var(--white);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.profile-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-body-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.stat-card {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-orange);
+}
+
+.profile-info-card,
+.profile-uploads-card {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.uploads-count-badge {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--secondary-text);
+  background-color: var(--warm-cream-alt);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.account-details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-label {
+  font-size: 0.78125rem;
+  color: var(--muted-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.item-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+/* Uploaded List */
+.uploaded-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.uploaded-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.uploaded-item:last-child {
+  border-bottom: none;
+}
+
+.uploaded-item-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.uploaded-file-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background-color: var(--primary-orange-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.uploaded-file-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.uploaded-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-text);
+  text-decoration: none;
+}
+
+.uploaded-title:hover {
+  color: var(--primary-orange);
+}
+
+.uploaded-submeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--secondary-text);
+}
+
+.uploaded-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.uploaded-dl-count {
+  font-size: 0.84375rem;
+  color: var(--secondary-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.action-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--white);
+  color: var(--secondary-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.action-icon-btn:hover {
+  border-color: var(--primary-orange);
+  color: var(--primary-orange);
+  background-color: var(--primary-orange-light);
+}
+
+.action-icon-btn.danger:hover {
+  border-color: var(--error-color);
+  color: var(--error-color);
+  background-color: var(--error-bg);
+}
+
+.profile-account-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+}
+
+/* Modals */
+.delete-modal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.warning-icon {
+  color: var(--error-color);
+}
+
+.subtext {
+  font-size: 0.84375rem;
+  color: var(--secondary-text);
+}
+
+.edit-profile-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-description {
+  font-size: 0.875rem;
+  color: var(--secondary-text);
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 860px) {
+  .profile-banner-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .profile-banner-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  .account-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .account-details-grid {
+    grid-template-columns: 1fr;
+  }
+  .uploaded-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .uploaded-item-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

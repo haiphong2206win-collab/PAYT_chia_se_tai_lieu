@@ -1,0 +1,100 @@
+.payt-auth-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #FFF0DB 0%, #FFF9F0 50%, #FAF3E8 100%);
+  position: relative;
+  padding: var(--space-8) var(--space-4);
+  overflow: hidden;
+}
+
+/* Background Sunrise Graphics */
+.sun-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.sun-circle {
+  position: absolute;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 209, 102, 0.6) 0%, rgba(245, 158, 66, 0.2) 60%, rgba(255, 249, 240, 0) 100%);
+}
+
+.hill-layer {
+  position: absolute;
+  bottom: -40px;
+  width: 120%;
+  height: 180px;
+  border-radius: 50% 50% 0 0;
+}
+
+.hill-1 {
+  left: -10%;
+  background: rgba(232, 222, 210, 0.4);
+  transform: rotate(-3deg);
+}
+
+.hill-2 {
+  right: -10%;
+  background: rgba(255, 242, 229, 0.6);
+  transform: rotate(4deg);
+}
+
+.payt-auth-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.payt-auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.payt-auth-card {
+  width: 100%;
+  background: var(--white);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.payt-auth-footer-link {
+  font-size: 0.875rem;
+}
+
+.payt-auth-footer-link a {
+  color: var(--secondary-text);
+  transition: color var(--transition-fast);
+}
+
+.payt-auth-footer-link a:hover {
+  color: var(--primary-orange);
+}
+
+@media (max-width: 480px) {
+  .payt-auth-card {
+    padding: var(--space-6) var(--space-4);
+  }
+}
