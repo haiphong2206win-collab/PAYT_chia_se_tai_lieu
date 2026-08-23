@@ -1,4 +1,3 @@
-import React from 'react';
 import DocumentCard from './DocumentCard';
 import './DocumentGrid.css';
 

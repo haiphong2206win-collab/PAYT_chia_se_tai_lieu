@@ -1,9 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  User,
-  Mail,
-  Calendar,
   Shield,
   FileText,
   Download,
@@ -23,7 +20,7 @@ import './Profile.css';
 
 export const Profile = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(MOCK_USER);
+  const [user] = useState(MOCK_USER);
   const [deleteModalDoc, setDeleteModalDoc] = useState(null);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 

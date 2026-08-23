@@ -6,7 +6,7 @@ export const useAuth = () => {
   const [user, setUser] = useState(MOCK_USER);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  const login = (email, password) => {
+  const login = () => {
     setIsAuthenticated(true);
     setUser(MOCK_USER);
   };

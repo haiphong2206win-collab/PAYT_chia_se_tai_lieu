@@ -1,4 +1,3 @@
-import React from 'react';
 import './Spinner.css';
 
 export const Spinner = ({ size = 'md', color = 'var(--primary-orange)', className = '' }) => {

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { UploadCloud, FileText, CheckCircle2, X, RefreshCw } from 'lucide-react';
 import Button from '../common/Button';
 import './UploadZone.css';
 
-export const UploadZone = ({ onFileSelect }) => {
+export const UploadZone = () => {
   const [selectedFile, setSelectedFile] = useState({
     name: 'CS301_Data_Structures_Lecture_Notes_2026.pdf',
     type: 'PDF',

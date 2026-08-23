@@ -1,4 +1,3 @@
-import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -6,9 +5,6 @@ import {
   Bookmark,
   Star,
   Calendar,
-  User,
-  FileText,
-  Eye,
   CheckCircle,
   Share2
 } from 'lucide-react';
@@ -21,7 +17,9 @@ import './DocumentDetail.css';
 
 export const DocumentDetail = () => {
   const { id } = useParams();
-  const document = MOCK_DOCUMENTS.find((doc) => doc.id === id) || MOCK_DOCUMENTS[0];
+  const document = MOCK_DOCUMENTS.find(
+    (doc) => doc.id === id || doc.id === `doc-${id}` || doc.id.replace('doc-', '') === id
+  ) || MOCK_DOCUMENTS[0];
   const relatedDocs = MOCK_DOCUMENTS.filter((doc) => doc.id !== document.id).slice(0, 3);
 
   const handleDownloadClick = () => {

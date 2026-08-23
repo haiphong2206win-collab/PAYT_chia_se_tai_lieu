@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { SlidersHorizontal } from 'lucide-react';
 import SearchBar from '../../components/common/SearchBar';
 import Select from '../../components/common/Select';
@@ -12,13 +12,17 @@ import './DocumentList.css';
 
 export const DocumentList = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialSearch = searchParams.get('search') || '';
   const initialMajor = searchParams.get('major') || '';
 
   const [sortValue, setSortValue] = useState('popular');
   const [currentPage, setCurrentPage] = useState(1);
-  const [filteredDocs, setFilteredDocs] = useState(MOCK_DOCUMENTS);
   const [showMobileFilter, setShowMobileFilter] = useState(false);
+
+  const handleClearFilters = () => {
+    navigate('/documents');
+  };
 
   return (
     <div className="payt-document-list-page">
@@ -40,7 +44,7 @@ export const DocumentList = () => {
         {/* Toolbar Header (Results Count + Mobile Filter Toggle + Sort) */}
         <div className="doc-list-toolbar">
           <div className="results-count">
-            Showing <strong>{filteredDocs.length}</strong> study documents
+            Showing <strong>{MOCK_DOCUMENTS.length}</strong> study documents
           </div>
 
           <div className="toolbar-controls">
@@ -70,12 +74,12 @@ export const DocumentList = () => {
             <DocumentFilter
               selectedMajors={initialMajor ? [initialMajor] : []}
               onFilterChange={(filters) => console.log('Filters changed:', filters)}
-              onClearFilters={() => console.log('Cleared filters')}
+              onClearFilters={handleClearFilters}
             />
           </aside>
 
           <main className="grid-main-wrapper">
-            <DocumentGrid documents={filteredDocs} />
+            <DocumentGrid documents={MOCK_DOCUMENTS} />
             <Pagination
               currentPage={currentPage}
               totalPages={3}

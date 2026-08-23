@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Sun, Upload, User, LogIn, Menu, X, BookOpen } from 'lucide-react';
+import { Sun, Upload, User, LogIn, Menu, X } from 'lucide-react';
 import Button from '../common/Button';
 import './Header.css';
 
@@ -8,8 +8,8 @@ export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
-  // For Phase 1 demonstration, we can toggle or check location to show Profile link or Login link
   const isProfileActive = location.pathname === '/profile';
+  const isAuthActive = location.pathname === '/login' || location.pathname === '/register';
 
   return (
     <header className="payt-header">
@@ -61,7 +61,7 @@ export const Header = () => {
             </Button>
           </Link>
           <Link to="/login">
-            <Button variant="ghost" size="sm" icon={LogIn}>
+            <Button variant={isAuthActive ? 'primary' : 'ghost'} size="sm" icon={LogIn}>
               Login
             </Button>
           </Link>
@@ -83,35 +83,35 @@ export const Header = () => {
           <NavLink
             to="/"
             end
-            className="payt-mobile-link"
+            className={({ isActive }) => `payt-mobile-link ${isActive ? 'active' : ''}`}
             onClick={() => setMobileMenuOpen(false)}
           >
             Home
           </NavLink>
           <NavLink
             to="/documents"
-            className="payt-mobile-link"
+            className={({ isActive }) => `payt-mobile-link ${isActive ? 'active' : ''}`}
             onClick={() => setMobileMenuOpen(false)}
           >
             Documents
           </NavLink>
           <NavLink
             to="/upload"
-            className="payt-mobile-link"
+            className={({ isActive }) => `payt-mobile-link ${isActive ? 'active' : ''}`}
             onClick={() => setMobileMenuOpen(false)}
           >
             Upload Document
           </NavLink>
           <NavLink
             to="/profile"
-            className="payt-mobile-link"
+            className={({ isActive }) => `payt-mobile-link ${isActive ? 'active' : ''}`}
             onClick={() => setMobileMenuOpen(false)}
           >
             My Profile
           </NavLink>
           <NavLink
             to="/login"
-            className="payt-mobile-link"
+            className={({ isActive }) => `payt-mobile-link ${isActive ? 'active' : ''}`}
             onClick={() => setMobileMenuOpen(false)}
           >
             Login / Register

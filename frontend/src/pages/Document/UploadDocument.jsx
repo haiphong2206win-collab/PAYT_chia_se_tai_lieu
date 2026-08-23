@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadCloud, FileText, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { UploadCloud, ArrowLeft } from 'lucide-react';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import Button from '../../components/common/Button';

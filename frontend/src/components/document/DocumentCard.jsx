@@ -1,6 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Download, Star, Calendar, FileCode, Presentation, File } from 'lucide-react';
+import { FileText, Download, Star, FileCode, Presentation } from 'lucide-react';
 import './DocumentCard.css';
 
 export const DocumentCard = ({ document, variant = 'standard' }) => {
@@ -12,9 +11,7 @@ export const DocumentCard = ({ document, variant = 'standard' }) => {
     fileType = 'PDF',
     fileSize = '3.5 MB',
     downloads = 0,
-    rating = 4.8,
-    uploadDate = '2026-08-10',
-    uploader
+    rating = 4.8
   } = document;
 
   const renderBadgeClass = (type) => {

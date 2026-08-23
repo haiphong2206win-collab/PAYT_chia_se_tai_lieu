@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, FileText, Download } from 'lucide-react';
+import { useState } from 'react';
+import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import './DocumentPreview.css';
 
 export const DocumentPreview = ({ document }) => {

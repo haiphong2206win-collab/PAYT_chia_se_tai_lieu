@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Filter, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
-import Button from '../common/Button';
 import { MAJORS, FILE_TYPES } from '../../utils/constants';
 import './DocumentFilter.css';
 
@@ -18,13 +17,21 @@ export const DocumentFilter = ({
     subject: true
   });
 
+  const normalizeStr = (s) => (s ? s.toLowerCase().replace(/[\s-_]+/g, '') : '');
+
+  const isMajorChecked = (major) => {
+    const normMajor = normalizeStr(major);
+    return majorsList.some(m => normalizeStr(m) === normMajor);
+  };
+
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
   const handleMajorToggle = (major) => {
-    const updated = majorsList.includes(major)
-      ? majorsList.filter(m => m !== major)
+    const isChecked = isMajorChecked(major);
+    const updated = isChecked
+      ? majorsList.filter(m => normalizeStr(m) !== normalizeStr(major))
       : [...majorsList, major];
     setMajorsList(updated);
     if (onFilterChange) onFilterChange({ majors: updated, types: typesList });
@@ -69,7 +76,7 @@ export const DocumentFilter = ({
               <label key={major} className="filter-checkbox-label">
                 <input
                   type="checkbox"
-                  checked={majorsList.includes(major)}
+                  checked={isMajorChecked(major)}
                   onChange={() => handleMajorToggle(major)}
                   className="filter-checkbox"
                 />

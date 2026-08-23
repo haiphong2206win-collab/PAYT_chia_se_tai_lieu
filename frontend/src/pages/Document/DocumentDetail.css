@@ -266,6 +266,9 @@
   .detail-main-layout {
     grid-template-columns: 1fr;
   }
+  .action-card {
+    position: static;
+  }
   .info-spec-grid {
     grid-template-columns: repeat(2, 1fr);
   }

@@ -7,7 +7,8 @@
   background: linear-gradient(180deg, #FFF0DB 0%, #FFF9F0 50%, #FAF3E8 100%);
   position: relative;
   padding: var(--space-8) var(--space-4);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Background Sunrise Graphics */
