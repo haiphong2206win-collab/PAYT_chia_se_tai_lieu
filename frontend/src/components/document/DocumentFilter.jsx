@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Filter, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { MAJORS, FILE_TYPES } from '../../utils/constants';
 import './DocumentFilter.css';
@@ -6,48 +6,83 @@ import './DocumentFilter.css';
 export const DocumentFilter = ({
   selectedMajors = [],
   selectedTypes = [],
+  selectedSubjects = [],
   onFilterChange,
   onClearFilters
 }) => {
   const [majorsList, setMajorsList] = useState(selectedMajors);
   const [typesList, setTypesList] = useState(selectedTypes);
+  const [subjectsList, setSubjectsList] = useState(selectedSubjects);
   const [expandedSections, setExpandedSections] = useState({
     major: true,
     type: true,
     subject: true
   });
 
+  useEffect(() => {
+    setMajorsList(selectedMajors);
+  }, [selectedMajors]);
+
+  useEffect(() => {
+    setTypesList(selectedTypes);
+  }, [selectedTypes]);
+
+  useEffect(() => {
+    setSubjectsList(selectedSubjects);
+  }, [selectedSubjects]);
+
   const normalizeStr = (s) => (s ? s.toLowerCase().replace(/[\s-_]+/g, '') : '');
 
   const isMajorChecked = (major) => {
     const normMajor = normalizeStr(major);
-    return majorsList.some(m => normalizeStr(m) === normMajor);
+    return majorsList.some((m) => normalizeStr(m) === normMajor);
+  };
+
+  const isSubjectChecked = (subj) => {
+    const normSubj = normalizeStr(subj);
+    return subjectsList.some((s) => normalizeStr(s) === normSubj);
   };
 
   const toggleSection = (section) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
   const handleMajorToggle = (major) => {
     const isChecked = isMajorChecked(major);
     const updated = isChecked
-      ? majorsList.filter(m => normalizeStr(m) !== normalizeStr(major))
+      ? majorsList.filter((m) => normalizeStr(m) !== normalizeStr(major))
       : [...majorsList, major];
     setMajorsList(updated);
-    if (onFilterChange) onFilterChange({ majors: updated, types: typesList });
+    if (onFilterChange) {
+      onFilterChange({ majors: updated, types: typesList, subjects: subjectsList });
+    }
   };
 
   const handleTypeToggle = (type) => {
     const updated = typesList.includes(type)
-      ? typesList.filter(t => t !== type)
+      ? typesList.filter((t) => t !== type)
       : [...typesList, type];
     setTypesList(updated);
-    if (onFilterChange) onFilterChange({ majors: majorsList, types: updated });
+    if (onFilterChange) {
+      onFilterChange({ majors: majorsList, types: updated, subjects: subjectsList });
+    }
+  };
+
+  const handleSubjectToggle = (subj) => {
+    const isChecked = isSubjectChecked(subj);
+    const updated = isChecked
+      ? subjectsList.filter((s) => normalizeStr(s) !== normalizeStr(subj))
+      : [...subjectsList, subj];
+    setSubjectsList(updated);
+    if (onFilterChange) {
+      onFilterChange({ majors: majorsList, types: typesList, subjects: updated });
+    }
   };
 
   const handleReset = () => {
     setMajorsList([]);
     setTypesList([]);
+    setSubjectsList([]);
     if (onClearFilters) onClearFilters();
   };
 
@@ -120,7 +155,12 @@ export const DocumentFilter = ({
           <div className="filter-options">
             {['Data Structures', 'Operating Systems', 'Corporate Finance', 'Human Anatomy', 'Constitutional Law'].map((subj) => (
               <label key={subj} className="filter-checkbox-label">
-                <input type="checkbox" className="filter-checkbox" />
+                <input
+                  type="checkbox"
+                  checked={isSubjectChecked(subj)}
+                  onChange={() => handleSubjectToggle(subj)}
+                  className="filter-checkbox"
+                />
                 <span className="checkbox-text">{subj}</span>
               </label>
             ))}
@@ -132,3 +172,4 @@ export const DocumentFilter = ({
 };
 
 export default DocumentFilter;
+

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { SlidersHorizontal } from 'lucide-react';
 import SearchBar from '../../components/common/SearchBar';
@@ -16,12 +16,87 @@ export const DocumentList = () => {
   const initialSearch = searchParams.get('search') || '';
   const initialMajor = searchParams.get('major') || '';
 
+  const [selectedMajors, setSelectedMajors] = useState(() => (initialMajor ? [initialMajor] : []));
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
+
   const [sortValue, setSortValue] = useState('popular');
   const [currentPage, setCurrentPage] = useState(1);
   const [showMobileFilter, setShowMobileFilter] = useState(false);
 
+  useEffect(() => {
+    if (initialMajor) {
+      setSelectedMajors((prev) => (prev.includes(initialMajor) ? prev : [...prev, initialMajor]));
+    }
+  }, [initialMajor]);
+
+  const normalizeStr = (s) => (s ? s.toLowerCase().replace(/[\s-_]+/g, '') : '');
+
+  const searchQuery = initialSearch.trim().toLowerCase();
+
+  const filteredDocuments = MOCK_DOCUMENTS.filter((doc) => {
+    // 1. Search Query condition (AND with all filters)
+    if (searchQuery) {
+      const titleMatch = doc.title?.toLowerCase().includes(searchQuery);
+      const subjectMatch = doc.subject?.toLowerCase().includes(searchQuery);
+      const majorMatch = doc.major?.toLowerCase().includes(searchQuery);
+      const descMatch = doc.description?.toLowerCase().includes(searchQuery);
+
+      if (!titleMatch && !subjectMatch && !majorMatch && !descMatch) {
+        return false;
+      }
+    }
+
+    // 2. Major filter (OR within group)
+    if (selectedMajors.length > 0) {
+      const matchesMajor = selectedMajors.some((selected) => {
+        const normSelected = normalizeStr(selected);
+        const normDocMajor = normalizeStr(doc.major);
+        const normDocSlug = normalizeStr(doc.majorSlug);
+        return normDocMajor === normSelected || normDocSlug === normSelected;
+      });
+      if (!matchesMajor) return false;
+    }
+
+    // 3. Document Type filter (OR within group)
+    if (selectedTypes.length > 0) {
+      const matchesType = selectedTypes.some((type) => {
+        if (type === 'Other') {
+          return !['PDF', 'Slides', 'Notes'].includes(doc.fileType);
+        }
+        return doc.fileType?.toLowerCase() === type.toLowerCase();
+      });
+      if (!matchesType) return false;
+    }
+
+    // 4. Subject filter (OR within group)
+    if (selectedSubjects.length > 0) {
+      const matchesSubject = selectedSubjects.some((subj) => {
+        if (!doc.subject) return false;
+        const normSubj = normalizeStr(subj);
+        const normDocSubj = normalizeStr(doc.subject);
+        return normDocSubj.includes(normSubj) || normSubj.includes(normDocSubj);
+      });
+      if (!matchesSubject) return false;
+    }
+
+    return true;
+  });
+
+  const handleFilterChange = ({ majors, types, subjects }) => {
+    if (majors !== undefined) setSelectedMajors(majors);
+    if (types !== undefined) setSelectedTypes(types);
+    if (subjects !== undefined) setSelectedSubjects(subjects);
+  };
+
   const handleClearFilters = () => {
-    navigate('/documents');
+    setSelectedMajors([]);
+    setSelectedTypes([]);
+    setSelectedSubjects([]);
+    if (initialMajor) {
+      const searchParam = initialSearch ? `?search=${encodeURIComponent(initialSearch)}` : '';
+      navigate(`/documents${searchParam}`);
+    }
   };
 
   return (
@@ -44,7 +119,7 @@ export const DocumentList = () => {
         {/* Toolbar Header (Results Count + Mobile Filter Toggle + Sort) */}
         <div className="doc-list-toolbar">
           <div className="results-count">
-            Showing <strong>{MOCK_DOCUMENTS.length}</strong> study documents
+            Showing <strong>{filteredDocuments.length}</strong> study documents
           </div>
 
           <div className="toolbar-controls">
@@ -72,14 +147,16 @@ export const DocumentList = () => {
         <div className="doc-list-layout">
           <aside className={`filter-sidebar-wrapper ${showMobileFilter ? 'mobile-visible' : ''}`}>
             <DocumentFilter
-              selectedMajors={initialMajor ? [initialMajor] : []}
-              onFilterChange={(filters) => console.log('Filters changed:', filters)}
+              selectedMajors={selectedMajors}
+              selectedTypes={selectedTypes}
+              selectedSubjects={selectedSubjects}
+              onFilterChange={handleFilterChange}
               onClearFilters={handleClearFilters}
             />
           </aside>
 
           <main className="grid-main-wrapper">
-            <DocumentGrid documents={MOCK_DOCUMENTS} />
+            <DocumentGrid documents={filteredDocuments} emptyMessage="No documents found" />
             <Pagination
               currentPage={currentPage}
               totalPages={3}
@@ -93,3 +170,4 @@ export const DocumentList = () => {
 };
 
 export default DocumentList;
+
