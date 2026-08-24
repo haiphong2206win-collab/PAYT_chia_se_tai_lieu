@@ -83,6 +83,21 @@ export const DocumentList = () => {
     return true;
   });
 
+  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
+    if (sortValue === 'popular') {
+      return (b.downloads || 0) - (a.downloads || 0);
+    }
+    if (sortValue === 'rating') {
+      return (b.rating || 0) - (a.rating || 0);
+    }
+    if (sortValue === 'newest') {
+      const dateA = a.uploadDate ? new Date(a.uploadDate).getTime() : 0;
+      const dateB = b.uploadDate ? new Date(b.uploadDate).getTime() : 0;
+      return dateB - dateA;
+    }
+    return 0;
+  });
+
   const handleFilterChange = ({ majors, types, subjects }) => {
     if (majors !== undefined) setSelectedMajors(majors);
     if (types !== undefined) setSelectedTypes(types);
@@ -156,7 +171,7 @@ export const DocumentList = () => {
           </aside>
 
           <main className="grid-main-wrapper">
-            <DocumentGrid documents={filteredDocuments} emptyMessage="No documents found" />
+            <DocumentGrid documents={sortedDocuments} emptyMessage="No documents found" />
             <Pagination
               currentPage={currentPage}
               totalPages={3}
