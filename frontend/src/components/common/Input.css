@@ -1,0 +1,87 @@
+.payt-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.payt-input-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary-text);
+}
+
+.required-star {
+  color: var(--coral-accent);
+}
+
+.payt-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.payt-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--input-bg);
+  color: var(--primary-text);
+  font-size: 0.9375rem;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.payt-input.has-left-icon {
+  padding-left: 44px;
+}
+
+.payt-input.has-right-element {
+  padding-right: 44px;
+}
+
+.payt-input-icon-left {
+  position: absolute;
+  left: 14px;
+  color: var(--muted-text);
+  pointer-events: none;
+}
+
+.payt-input-right-element {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payt-input:focus {
+  border-color: var(--primary-orange);
+  box-shadow: 0 0 0 3px rgba(245, 158, 66, 0.15);
+}
+
+.payt-input-group.has-error .payt-input {
+  border-color: var(--error-color);
+}
+
+.payt-input-group.has-error .payt-input:focus {
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.15);
+}
+
+.payt-input-error {
+  font-size: 0.78125rem;
+  color: var(--error-color);
+}
+
+.payt-input-helper {
+  font-size: 0.78125rem;
+  color: var(--secondary-text);
+}
+
+.payt-input:disabled {
+  background-color: var(--disabled-bg);
+  cursor: not-allowed;
+}

@@ -1,0 +1,72 @@
+/* PayT Design System - Design Tokens ("Dawn of Knowledge") */
+
+:root {
+  /* Color Palette */
+  --primary-orange: #F59E42;
+  --primary-orange-hover: #E08B2F;
+  --primary-orange-light: #FFF2E5;
+  --sunlight-yellow: #FFD166;
+  --coral-accent: #F97352;
+  --coral-accent-hover: #E35E3D;
+  --warm-cream: #FFF9F0;
+  --warm-cream-alt: #FAF3E8;
+  --white: #FFFFFF;
+  
+  /* Neutral Colors */
+  --primary-text: #2D2926;
+  --secondary-text: #786F68;
+  --muted-text: #A09890;
+  --border-color: #E8DED2;
+  --border-hover: #D8C8B6;
+  --input-bg: #FFFFFF;
+  --disabled-bg: #F2EDE6;
+
+  /* Status Colors */
+  --success-color: #2E8B57;
+  --success-bg: #E8F5E9;
+  --error-color: #E53935;
+  --error-bg: #FFEBEE;
+  --badge-pdf-bg: #FFEBEE;
+  --badge-pdf-color: #D32F2F;
+  --badge-slides-bg: #FFF3E0;
+  --badge-slides-color: #E65100;
+  --badge-notes-bg: #E3F2FD;
+  --badge-notes-color: #1976D2;
+
+  /* Typography */
+  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Spacing System (8px grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Borders & Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(45, 41, 38, 0.04);
+  --shadow-md: 0 4px 12px rgba(45, 41, 38, 0.08);
+  --shadow-lg: 0 8px 24px rgba(45, 41, 38, 0.12);
+  --shadow-orange: 0 4px 14px rgba(245, 158, 66, 0.3);
+
+  /* Layout */
+  --content-max-width: 1240px;
+  --header-height: 72px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+}

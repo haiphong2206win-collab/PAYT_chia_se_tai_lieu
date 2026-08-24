@@ -1,0 +1,52 @@
+.payt-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.payt-select-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary-text);
+}
+
+.payt-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.payt-select {
+  width: 100%;
+  height: 46px;
+  padding: 0 36px 0 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--input-bg);
+  color: var(--primary-text);
+  font-size: 0.9375rem;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.payt-select-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--secondary-text);
+  pointer-events: none;
+  font-size: 0.8rem;
+}
+
+.payt-select:focus {
+  border-color: var(--primary-orange);
+  box-shadow: 0 0 0 3px rgba(245, 158, 66, 0.15);
+}
+
+.payt-select-error {
+  font-size: 0.78125rem;
+  color: var(--error-color);
+}

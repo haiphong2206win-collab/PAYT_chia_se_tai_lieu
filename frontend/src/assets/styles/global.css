@@ -1,0 +1,213 @@
+@import './variables.css';
+
+/* CSS Reset & Base Rules */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--primary-text);
+  background-color: var(--warm-cream);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--primary-text);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 2.75rem; /* ~44px */
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.875rem; /* ~30px */
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 1.375rem; /* ~22px */
+}
+
+h4 {
+  font-size: 1.125rem; /* ~18px */
+}
+
+p {
+  color: var(--secondary-text);
+  font-size: 0.9375rem; /* 15px */
+}
+
+a {
+  color: var(--primary-orange);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--primary-orange-hover);
+}
+
+button, input, select, textarea {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+}
+
+/* Layout Utilities */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+/* Text Accents */
+.text-highlight {
+  color: var(--coral-accent);
+}
+
+.text-orange {
+  color: var(--primary-orange);
+}
+
+.text-secondary {
+  color: var(--secondary-text);
+}
+
+.text-muted {
+  color: var(--muted-text);
+}
+
+/* Sunrise Glow Background Utilities */
+.sunrise-bg-soft {
+  background: linear-gradient(180deg, #FFF0DB 0%, #FFF9F0 100%);
+}
+
+.sunrise-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.sunrise-glow::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(255, 209, 102, 0.45) 0%, rgba(245, 158, 66, 0.15) 50%, rgba(255, 249, 240, 0) 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Common Card Style */
+.payt-card {
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.payt-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
+}
+
+.payt-card-interactive:hover {
+  transform: translateY(-2px);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem; /* 12px */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-pdf {
+  background-color: var(--badge-pdf-bg);
+  color: var(--badge-pdf-color);
+}
+
+.badge-slides {
+  background-color: var(--badge-slides-bg);
+  color: var(--badge-slides-color);
+}
+
+.badge-notes {
+  background-color: var(--badge-notes-bg);
+  color: var(--badge-notes-color);
+}
+
+.badge-default {
+  background-color: var(--warm-cream-alt);
+  color: var(--secondary-text);
+  border: 1px solid var(--border-color);
+}
+
+.badge-major {
+  background-color: var(--primary-orange-light);
+  color: var(--primary-orange-hover);
+  font-weight: 500;
+  text-transform: none;
+}
+
+/* Responsive Grid Base */
+.responsive-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+@media (max-width: 992px) {
+  .responsive-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  h1 { font-size: 2.25rem; }
+  h2 { font-size: 1.625rem; }
+}
+
+@media (max-width: 640px) {
+  .responsive-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .container {
+    padding: 0 var(--space-4);
+  }
+  h1 { font-size: 1.875rem; }
+  h2 { font-size: 1.375rem; }
+}

@@ -1,0 +1,177 @@
+.payt-header {
+  height: var(--header-height);
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(45, 41, 38, 0.03);
+}
+
+.payt-header-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Logo System */
+.payt-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.payt-logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--sunlight-yellow) 0%, var(--primary-orange) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.payt-sun-icon {
+  color: var(--white);
+}
+
+.payt-logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-main {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.logo-accent {
+  color: var(--primary-orange);
+}
+
+.logo-tagline {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--coral-accent);
+}
+
+/* Desktop Navigation */
+.payt-nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.payt-nav-link {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--secondary-text);
+  position: relative;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color var(--transition-fast);
+}
+
+.payt-nav-link .nav-icon {
+  color: var(--muted-text);
+  transition: color var(--transition-fast);
+}
+
+.payt-nav-link:hover {
+  color: var(--primary-orange);
+}
+
+.payt-nav-link:hover .nav-icon {
+  color: var(--primary-orange);
+}
+
+/* Active Nav State - Orange text + small orange underline */
+.payt-nav-link.active {
+  color: var(--primary-orange);
+  font-weight: 600;
+}
+
+.payt-nav-link.active .nav-icon {
+  color: var(--primary-orange);
+}
+
+.payt-nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--primary-orange);
+  border-radius: var(--radius-full);
+}
+
+/* Header Actions */
+.payt-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Mobile Controls */
+.payt-mobile-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--primary-text);
+  cursor: pointer;
+  padding: 6px;
+}
+
+.payt-mobile-menu {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .payt-nav-desktop,
+  .payt-header-actions {
+    display: none;
+  }
+
+  .payt-mobile-toggle {
+    display: flex;
+  }
+
+  .payt-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    background-color: var(--white);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    padding: 16px var(--space-6);
+    gap: 12px;
+  }
+
+  .payt-mobile-link {
+    padding: 10px 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--primary-text);
+    border-bottom: 1px dashed var(--border-color);
+  }
+
+  .payt-mobile-link.active {
+    color: var(--primary-orange);
+    font-weight: 600;
+  }
+}

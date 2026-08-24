@@ -1,0 +1,60 @@
+.payt-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: var(--space-8);
+}
+
+.payt-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.payt-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--white);
+  color: var(--primary-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.payt-page-btn:hover:not(:disabled):not(.active) {
+  border-color: var(--primary-orange);
+  color: var(--primary-orange);
+  background-color: var(--primary-orange-light);
+}
+
+.payt-page-btn.active {
+  background-color: var(--primary-orange);
+  color: var(--white);
+  border-color: var(--primary-orange);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.payt-page-nav {
+  gap: 4px;
+}
+
+.payt-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--disabled-bg);
+}
+
+@media (max-width: 480px) {
+  .payt-page-nav span {
+    display: none;
+  }
+}
