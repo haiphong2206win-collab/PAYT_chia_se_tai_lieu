@@ -10,6 +10,8 @@ import { MOCK_DOCUMENTS } from '../../mock/documents';
 import { SORT_OPTIONS } from '../../utils/constants';
 import './DocumentList.css';
 
+const ITEMS_PER_PAGE = 6;
+
 export const DocumentList = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -33,6 +35,11 @@ export const DocumentList = () => {
   const normalizeStr = (s) => (s ? s.toLowerCase().replace(/[\s-_]+/g, '') : '');
 
   const searchQuery = initialSearch.trim().toLowerCase();
+
+  // Reset to page 1 whenever search query, filters, or sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedMajors, selectedTypes, selectedSubjects, sortValue]);
 
   const filteredDocuments = MOCK_DOCUMENTS.filter((doc) => {
     // 1. Search Query condition (AND with all filters)
@@ -97,6 +104,10 @@ export const DocumentList = () => {
     }
     return 0;
   });
+
+  const totalPages = Math.ceil(sortedDocuments.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedDocuments = sortedDocuments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const handleFilterChange = ({ majors, types, subjects }) => {
     if (majors !== undefined) setSelectedMajors(majors);
@@ -171,12 +182,14 @@ export const DocumentList = () => {
           </aside>
 
           <main className="grid-main-wrapper">
-            <DocumentGrid documents={sortedDocuments} emptyMessage="No documents found" />
-            <Pagination
-              currentPage={currentPage}
-              totalPages={3}
-              onPageChange={(page) => setCurrentPage(page)}
-            />
+            <DocumentGrid documents={paginatedDocuments} emptyMessage="No documents found" />
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            )}
           </main>
         </div>
       </div>

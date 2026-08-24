@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff, LogIn, CheckCircle2 } from 'lucide-react';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import './Auth.css';
@@ -10,13 +10,71 @@ export const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const validateEmail = (val) => {
+    if (!val || !val.trim()) {
+      return 'Email address is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(val.trim())) {
+      return 'Please enter a valid email address';
+    }
+    return '';
+  };
+
+  const validatePassword = (val) => {
+    if (!val) {
+      return 'Password is required';
+    }
+    return '';
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    const emailErr = validateEmail(email);
+    if (emailErr) newErrors.email = emailErr;
+
+    const passwordErr = validatePassword(password);
+    if (passwordErr) newErrors.password = passwordErr;
+
+    return newErrors;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Visual Phase 1 navigation demo
-    alert('Phase 1 Demonstration: Login credentials submitted visually. Redirecting to Profile...');
-    navigate('/profile');
+    setSuccessMessage('');
+
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+    } else {
+      setErrors({});
+      setSuccessMessage('Login successful! (Frontend mock demonstration)');
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    const val = e.target.value;
+    setEmail(val);
+    if (errors.email) {
+      setErrors((prev) => ({
+        ...prev,
+        email: validateEmail(val)
+      }));
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const val = e.target.value;
+    setPassword(val);
+    if (errors.password) {
+      setErrors((prev) => ({
+        ...prev,
+        password: validatePassword(val)
+      }));
+    }
   };
 
   return (
@@ -26,14 +84,22 @@ export const Login = () => {
         <p className="auth-subtitle">Log in to continue to PayT</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="auth-form">
+      {successMessage && (
+        <div className="auth-success-alert">
+          <CheckCircle2 size={20} style={{ flexShrink: 0 }} />
+          <span>{successMessage}</span>
+        </div>
+      )}
+
+      <form noValidate onSubmit={handleSubmit} className="auth-form">
         <Input
           label="Email Address"
           type="email"
           placeholder="name@university.edu"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           icon={Mail}
+          error={errors.email}
           required
         />
 
@@ -42,8 +108,9 @@ export const Login = () => {
           type={showPassword ? 'text' : 'password'}
           placeholder="Enter your password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={handlePasswordChange}
           icon={Lock}
+          error={errors.password}
           required
           rightElement={
             <button
@@ -86,3 +153,4 @@ export const Login = () => {
 };
 
 export default Login;
+
