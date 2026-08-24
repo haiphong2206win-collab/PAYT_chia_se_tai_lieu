@@ -17,9 +17,25 @@
   text-align: center;
 }
 
-.payt-dropzone:hover {
+.payt-dropzone:hover,
+.payt-dropzone.drag-over {
   border-color: var(--primary-orange);
   background-color: var(--primary-orange-light);
+}
+
+.payt-dropzone.has-error {
+  border-color: var(--error-color);
+  background-color: var(--error-bg);
+}
+
+.upload-zone-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--error-color);
+  font-size: 0.8125rem;
+  margin-top: 8px;
+  font-weight: 500;
 }
 
 .dropzone-icon-circle {

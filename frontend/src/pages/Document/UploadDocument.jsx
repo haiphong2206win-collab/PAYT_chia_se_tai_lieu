@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadCloud, ArrowLeft } from 'lucide-react';
+import { UploadCloud, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
 import Button from '../../components/common/Button';
@@ -11,16 +11,104 @@ import './UploadDocument.css';
 export const UploadDocument = () => {
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState('Data Structures & Algorithms - Complete Lecture Notes 2026');
-  const [description, setDescription] = useState('Comprehensive study guide covering Trees, Graphs, Sorting Algorithms, Dynamic Programming, and Complexity Analysis.');
-  const [major, setMajor] = useState('Computer Science');
-  const [subject, setSubject] = useState('Data Structures & Algorithms');
-  const [documentType, setDocumentType] = useState('PDF');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileError, setFileError] = useState('');
+
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [major, setMajor] = useState('');
+  const [subject, setSubject] = useState('');
+  const [documentType, setDocumentType] = useState('');
+
+  const [errors, setErrors] = useState({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleFileSelect = (fileData, err) => {
+    if (err) {
+      setSelectedFile(null);
+      setFileError(err);
+      setErrors((prev) => ({ ...prev, file: err }));
+    } else {
+      setSelectedFile(fileData);
+      setFileError('');
+      setErrors((prev) => ({ ...prev, file: '' }));
+      setUploadProgress(0);
+      setSuccessMessage('');
+
+      if (!title && fileData?.name) {
+        const nameWithoutExt = fileData.name.substring(0, fileData.name.lastIndexOf('.')) || fileData.name;
+        setTitle(nameWithoutExt);
+        setErrors((prev) => ({ ...prev, title: '' }));
+      }
+      if (!documentType && fileData?.type) {
+        const matched = FILE_TYPES.find(
+          (t) => t.toUpperCase() === fileData.type.toUpperCase()
+        );
+        if (matched) {
+          setDocumentType(matched);
+          setErrors((prev) => ({ ...prev, documentType: '' }));
+        }
+      }
+    }
+  };
+
+  const handleFileRemove = () => {
+    setSelectedFile(null);
+    setFileError('');
+    setErrors((prev) => ({ ...prev, file: '' }));
+    setUploadProgress(0);
+    setSuccessMessage('');
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Phase 1 Demonstration: Document metadata submitted visually. Redirecting to Document Detail page...');
-    navigate('/documents/doc-1');
+
+    if (isUploading) return;
+
+    const newErrors = {};
+
+    if (!selectedFile) {
+      newErrors.file = 'Please select a document file.';
+    } else if (fileError) {
+      newErrors.file = fileError;
+    }
+
+    if (!title.trim()) {
+      newErrors.title = 'Document title is required.';
+    }
+
+    if (!major) {
+      newErrors.major = 'Academic major is required.';
+    }
+
+    if (!subject.trim()) {
+      newErrors.subject = 'Course / Subject is required.';
+    }
+
+    if (!documentType) {
+      newErrors.documentType = 'Document type is required.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSuccessMessage('');
+      return;
+    }
+
+    setErrors({});
+    setSuccessMessage('');
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    setTimeout(() => setUploadProgress(30), 200);
+    setTimeout(() => setUploadProgress(60), 500);
+    setTimeout(() => {
+      setUploadProgress(100);
+      setIsUploading(false);
+      setSuccessMessage('Document uploaded successfully');
+    }, 800);
   };
 
   return (
@@ -28,18 +116,32 @@ export const UploadDocument = () => {
       <div className="container upload-container">
         {/* Page Header */}
         <div className="upload-page-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
+          <button type="button" className="back-btn" onClick={() => navigate(-1)}>
             <ArrowLeft size={16} /> Back
           </button>
           <h1 className="upload-title">Upload Document</h1>
           <p className="upload-subtitle">Share your study materials and help fellow students succeed.</p>
         </div>
 
+        {successMessage && (
+          <div className="upload-success-alert">
+            <CheckCircle2 size={20} className="success-icon" />
+            <span>{successMessage}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="upload-form-wrapper">
           {/* 1. Drag & Drop File Upload Zone */}
           <div className="upload-section">
             <h3 className="section-heading">1. Select Document File</h3>
-            <UploadZone />
+            <UploadZone
+              selectedFile={selectedFile}
+              onFileSelect={handleFileSelect}
+              onFileRemove={handleFileRemove}
+              error={errors.file || fileError}
+              isUploading={isUploading}
+              uploadProgress={uploadProgress}
+            />
           </div>
 
           {/* 2. Document Details & Metadata Form */}
@@ -51,7 +153,11 @@ export const UploadDocument = () => {
                 label="Document Title"
                 placeholder="e.g. Data Structures Midterm Exam Prep Notes 2026"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
+                }}
+                error={errors.title}
                 required
                 className="full-width-field"
               />
@@ -71,7 +177,11 @@ export const UploadDocument = () => {
                 label="Academic Major"
                 options={MAJORS}
                 value={major}
-                onChange={(e) => setMajor(e.target.value)}
+                onChange={(e) => {
+                  setMajor(e.target.value);
+                  if (errors.major) setErrors((prev) => ({ ...prev, major: '' }));
+                }}
+                error={errors.major}
                 required
               />
 
@@ -79,7 +189,11 @@ export const UploadDocument = () => {
                 label="Course / Subject"
                 placeholder="e.g. Operating Systems"
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
+                onChange={(e) => {
+                  setSubject(e.target.value);
+                  if (errors.subject) setErrors((prev) => ({ ...prev, subject: '' }));
+                }}
+                error={errors.subject}
                 required
               />
 
@@ -87,7 +201,11 @@ export const UploadDocument = () => {
                 label="Document Type"
                 options={FILE_TYPES}
                 value={documentType}
-                onChange={(e) => setDocumentType(e.target.value)}
+                onChange={(e) => {
+                  setDocumentType(e.target.value);
+                  if (errors.documentType) setErrors((prev) => ({ ...prev, documentType: '' }));
+                }}
+                error={errors.documentType}
                 required
               />
             </div>
@@ -100,6 +218,7 @@ export const UploadDocument = () => {
               variant="secondary"
               size="lg"
               onClick={() => navigate(-1)}
+              disabled={isUploading}
             >
               Cancel
             </Button>
@@ -108,8 +227,9 @@ export const UploadDocument = () => {
               variant="primary"
               size="lg"
               icon={UploadCloud}
+              disabled={isUploading}
             >
-              Upload Document
+              {isUploading ? `Uploading (${uploadProgress}%)...` : 'Upload Document'}
             </Button>
           </div>
         </form>
