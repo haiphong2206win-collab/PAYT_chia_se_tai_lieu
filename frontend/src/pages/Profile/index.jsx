@@ -10,28 +10,134 @@ import {
   LogOut,
   Upload,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  FolderOpen
 } from 'lucide-react';
 import Button from '../../components/common/Button';
+import Input from '../../components/common/Input';
+import Select from '../../components/common/Select';
 import Modal from '../../components/common/Modal';
 import { MOCK_USER } from '../../mock/user';
+import { MAJORS } from '../../utils/constants';
 import { formatDate } from '../../utils/formatters';
 import './Profile.css';
 
 export const Profile = () => {
   const navigate = useNavigate();
-  const [user] = useState(MOCK_USER);
-  const [deleteModalDoc, setDeleteModalDoc] = useState(null);
-  const [editProfileOpen, setEditProfileOpen] = useState(false);
 
+  // Local state for user profile
+  const [userProfile, setUserProfile] = useState({
+    fullName: MOCK_USER.fullName,
+    email: MOCK_USER.email,
+    role: MOCK_USER.role,
+    joinedDate: MOCK_USER.joinedDate,
+    avatar: MOCK_USER.avatar,
+    stats: { ...MOCK_USER.stats }
+  });
+
+  // Local state for uploaded documents list
+  const [uploadedDocs, setUploadedDocs] = useState(MOCK_USER.uploadedDocuments);
+
+  // Edit Profile modal state
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [profileDraft, setProfileDraft] = useState({
+    fullName: '',
+    email: '',
+    avatar: ''
+  });
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+
+  // Edit Document modal state
+  const [editDocModal, setEditDocModal] = useState(null);
+  const [docDraft, setDocDraft] = useState({
+    title: '',
+    subject: '',
+    major: ''
+  });
+  const [docError, setDocError] = useState('');
+
+  // Delete Confirmation modal state
+  const [deleteModalDoc, setDeleteModalDoc] = useState(null);
+
+  // Open Edit Profile modal
+  const handleOpenEditProfile = () => {
+    setProfileDraft({
+      fullName: userProfile.fullName,
+      email: userProfile.email,
+      avatar: userProfile.avatar
+    });
+    setProfileError('');
+    setEditProfileOpen(true);
+  };
+
+  // Save Edit Profile
+  const handleSaveProfile = (e) => {
+    if (e) e.preventDefault();
+    if (!profileDraft.fullName.trim()) {
+      setProfileError('Full Name is required.');
+      return;
+    }
+
+    setUserProfile((prev) => ({
+      ...prev,
+      fullName: profileDraft.fullName.trim(),
+      email: profileDraft.email.trim() || prev.email,
+      avatar: profileDraft.avatar.trim() || prev.avatar
+    }));
+
+    setProfileError('');
+    setEditProfileOpen(false);
+    setProfileSuccess('Profile updated successfully!');
+    setTimeout(() => setProfileSuccess(''), 3000);
+  };
+
+  // Open Edit Document modal
+  const handleOpenEditDoc = (doc) => {
+    setEditDocModal(doc);
+    setDocDraft({
+      title: doc.title,
+      subject: doc.subject || '',
+      major: doc.major || ''
+    });
+    setDocError('');
+  };
+
+  // Save Edit Document
+  const handleSaveDoc = (e) => {
+    if (e) e.preventDefault();
+    if (!docDraft.title.trim()) {
+      setDocError('Document title is required.');
+      return;
+    }
+
+    setUploadedDocs((prev) =>
+      prev.map((d) =>
+        d.id === editDocModal.id
+          ? {
+              ...d,
+              title: docDraft.title.trim(),
+              subject: docDraft.subject.trim() || d.subject,
+              major: docDraft.major || d.major
+            }
+          : d
+      )
+    );
+
+    setDocError('');
+    setEditDocModal(null);
+  };
+
+  // Confirm Delete Document
   const handleConfirmDelete = () => {
-    alert(`Phase 1 Demonstration: Deleted "${deleteModalDoc.title}" visually.`);
+    if (!deleteModalDoc) return;
+    setUploadedDocs((prev) => prev.filter((d) => d.id !== deleteModalDoc.id));
     setDeleteModalDoc(null);
   };
 
+  // Logout Interaction
   const handleLogout = () => {
-    alert('Phase 1 Demonstration: Logged out visually. Redirecting to Home...');
-    navigate('/');
+    navigate('/login');
   };
 
   return (
@@ -40,18 +146,18 @@ export const Profile = () => {
       <div className="profile-banner sunrise-bg-soft">
         <div className="container profile-banner-container">
           <div className="profile-avatar-wrap">
-            <img src={user.avatar} alt={user.fullName} className="profile-avatar" />
+            <img src={userProfile.avatar} alt={userProfile.fullName} className="profile-avatar" />
             <div className="avatar-badge">
               <CheckCircle2 size={18} className="verified-icon" />
             </div>
           </div>
 
           <div className="profile-title-block">
-            <h1 className="profile-name">{user.fullName}</h1>
-            <p className="profile-email">{user.email}</p>
+            <h1 className="profile-name">{userProfile.fullName}</h1>
+            <p className="profile-email">{userProfile.email}</p>
             <div className="profile-role-pill">
               <Shield size={14} />
-              <span>{user.role}</span>
+              <span>{userProfile.role}</span>
             </div>
           </div>
 
@@ -60,7 +166,7 @@ export const Profile = () => {
               variant="secondary"
               size="md"
               icon={Edit3}
-              onClick={() => setEditProfileOpen(true)}
+              onClick={handleOpenEditProfile}
             >
               Edit Profile
             </Button>
@@ -77,18 +183,25 @@ export const Profile = () => {
       </div>
 
       <div className="container profile-body-container">
+        {profileSuccess && (
+          <div className="profile-success-alert">
+            <CheckCircle2 size={18} className="success-icon" />
+            <span>{profileSuccess}</span>
+          </div>
+        )}
+
         {/* Account Summary Metrics */}
         <div className="profile-stats-grid">
           <div className="payt-card stat-card">
-            <span className="stat-value">{user.stats.totalUploads}</span>
+            <span className="stat-value">{uploadedDocs.length}</span>
             <span className="stat-label">Uploaded Documents</span>
           </div>
           <div className="payt-card stat-card">
-            <span className="stat-value">{user.stats.totalDownloads.toLocaleString()}</span>
+            <span className="stat-value">{userProfile.stats.totalDownloads.toLocaleString()}</span>
             <span className="stat-label">Total Downloads Received</span>
           </div>
           <div className="payt-card stat-card">
-            <span className="stat-value">{user.stats.averageRating} ★</span>
+            <span className="stat-value">{userProfile.stats.averageRating} ★</span>
             <span className="stat-label">Average Material Rating</span>
           </div>
         </div>
@@ -101,7 +214,7 @@ export const Profile = () => {
               variant="ghost"
               size="sm"
               icon={Edit3}
-              onClick={() => setEditProfileOpen(true)}
+              onClick={handleOpenEditProfile}
             >
               Edit
             </Button>
@@ -110,19 +223,19 @@ export const Profile = () => {
           <div className="account-details-grid">
             <div className="detail-item">
               <span className="item-label">Full Name</span>
-              <span className="item-value">{user.fullName}</span>
+              <span className="item-value">{userProfile.fullName}</span>
             </div>
             <div className="detail-item">
               <span className="item-label">Email Address</span>
-              <span className="item-value">{user.email}</span>
+              <span className="item-value">{userProfile.email}</span>
             </div>
             <div className="detail-item">
               <span className="item-label">Account Role</span>
-              <span className="item-value">{user.role}</span>
+              <span className="item-value">{userProfile.role}</span>
             </div>
             <div className="detail-item">
               <span className="item-label">Joined Date</span>
-              <span className="item-value">{user.joinedDate}</span>
+              <span className="item-value">{userProfile.joinedDate}</span>
             </div>
           </div>
         </div>
@@ -131,19 +244,21 @@ export const Profile = () => {
         <div className="payt-card profile-uploads-card">
           <div className="info-card-header">
             <h3 className="section-title">My Uploaded Documents</h3>
-            <span className="uploads-count-badge">{user.uploadedDocuments.length} items</span>
+            <span className="uploads-count-badge">{uploadedDocs.length} items</span>
           </div>
 
-          {user.uploadedDocuments.length === 0 ? (
+          {uploadedDocs.length === 0 ? (
             <div className="empty-uploads">
-              <p>No documents uploaded yet.</p>
+              <FolderOpen size={48} className="text-orange" />
+              <p className="empty-title">No uploaded documents yet</p>
+              <p className="empty-subtext">Share your lecture notes or study guides with fellow students.</p>
               <Button variant="primary" size="sm" icon={Upload} onClick={() => navigate('/upload')}>
                 Upload Your First Document
               </Button>
             </div>
           ) : (
             <div className="uploaded-list">
-              {user.uploadedDocuments.map((doc) => (
+              {uploadedDocs.map((doc) => (
                 <div key={doc.id} className="uploaded-item">
                   <div className="uploaded-item-main">
                     <div className="uploaded-file-icon">
@@ -172,13 +287,15 @@ export const Profile = () => {
                       </button>
                     </Link>
                     <button
+                      type="button"
                       className="action-icon-btn"
                       title="Edit Document"
-                      onClick={() => alert(`Edit metadata for "${doc.title}" (Phase 1 visual control).`)}
+                      onClick={() => handleOpenEditDoc(doc)}
                     >
                       <Edit3 size={16} />
                     </button>
                     <button
+                      type="button"
                       className="action-icon-btn danger"
                       title="Delete Document"
                       onClick={() => setDeleteModalDoc(doc)}
@@ -229,7 +346,7 @@ export const Profile = () => {
         )}
       </Modal>
 
-      {/* Edit Profile Modal Placeholder */}
+      {/* Edit Profile Modal */}
       <Modal
         isOpen={editProfileOpen}
         onClose={() => setEditProfileOpen(false)}
@@ -239,32 +356,93 @@ export const Profile = () => {
             <Button variant="secondary" size="md" onClick={() => setEditProfileOpen(false)}>
               Cancel
             </Button>
-            <Button variant="primary" size="md" onClick={() => {
-              alert('Profile updated visually.');
-              setEditProfileOpen(false);
-            }}>
+            <Button variant="primary" size="md" onClick={handleSaveProfile}>
               Save Changes
             </Button>
           </>
         }
       >
-        <div className="edit-profile-modal-form">
+        <form onSubmit={handleSaveProfile} className="edit-profile-modal-form">
           <p className="modal-description">Update your personal account information.</p>
-          <div className="form-fields">
-            <div className="payt-input-group">
-              <label className="payt-input-label">Full Name</label>
-              <input type="text" className="payt-input" defaultValue={user.fullName} />
-            </div>
-            <div className="payt-input-group">
-              <label className="payt-input-label">Email Address</label>
-              <input type="email" className="payt-input" defaultValue={user.email} />
-            </div>
-            <div className="payt-input-group">
-              <label className="payt-input-label">Academic Role</label>
-              <input type="text" className="payt-input" defaultValue={user.role} />
-            </div>
+          <div className="avatar-edit-preview-wrapper">
+            <img
+              src={profileDraft.avatar || userProfile.avatar}
+              alt="Avatar Preview"
+              className="avatar-edit-preview"
+            />
+            <Input
+              label="Avatar Image URL"
+              placeholder="https://..."
+              value={profileDraft.avatar}
+              onChange={(e) => setProfileDraft((prev) => ({ ...prev, avatar: e.target.value }))}
+              className="full-width-field"
+            />
           </div>
-        </div>
+          <div className="form-fields">
+            <Input
+              label="Full Name"
+              value={profileDraft.fullName}
+              onChange={(e) => {
+                setProfileDraft((prev) => ({ ...prev, fullName: e.target.value }));
+                if (profileError) setProfileError('');
+              }}
+              error={profileError}
+              required
+            />
+            <Input
+              label="Email Address"
+              type="email"
+              value={profileDraft.email}
+              onChange={(e) => setProfileDraft((prev) => ({ ...prev, email: e.target.value }))}
+            />
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Document Modal */}
+      <Modal
+        isOpen={!!editDocModal}
+        onClose={() => setEditDocModal(null)}
+        title="Edit Document Information"
+        footer={
+          <>
+            <Button variant="secondary" size="md" onClick={() => setEditDocModal(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="md" onClick={handleSaveDoc}>
+              Save Changes
+            </Button>
+          </>
+        }
+      >
+        {editDocModal && (
+          <form onSubmit={handleSaveDoc} className="edit-profile-modal-form">
+            <p className="modal-description">Update document title and academic metadata.</p>
+            <div className="form-fields">
+              <Input
+                label="Document Title"
+                value={docDraft.title}
+                onChange={(e) => {
+                  setDocDraft((prev) => ({ ...prev, title: e.target.value }));
+                  if (docError) setDocError('');
+                }}
+                error={docError}
+                required
+              />
+              <Input
+                label="Course / Subject"
+                value={docDraft.subject}
+                onChange={(e) => setDocDraft((prev) => ({ ...prev, subject: e.target.value }))}
+              />
+              <Select
+                label="Academic Major"
+                options={MAJORS}
+                value={docDraft.major}
+                onChange={(e) => setDocDraft((prev) => ({ ...prev, major: e.target.value }))}
+              />
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   );
