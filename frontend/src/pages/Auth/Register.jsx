@@ -82,8 +82,11 @@ export const Register = () => {
     return newErrors;
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setSuccessMessage('');
 
     const validationErrors = validateForm();
@@ -91,7 +94,11 @@ export const Register = () => {
       setErrors(validationErrors);
     } else {
       setErrors({});
-      setSuccessMessage('Account created successfully! (Frontend mock demonstration)');
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setSuccessMessage('Account created successfully! (Frontend mock demonstration)');
+      }, 300);
     }
   };
 
@@ -248,8 +255,8 @@ export const Register = () => {
           {errors.acceptTerms && <p className="auth-terms-error">{errors.acceptTerms}</p>}
         </div>
 
-        <Button type="submit" variant="primary" size="lg" fullWidth icon={UserPlus}>
-          Create Account
+        <Button type="submit" variant="primary" size="lg" fullWidth icon={UserPlus} loading={isSubmitting}>
+          {isSubmitting ? 'Creating account...' : 'Create Account'}
         </Button>
       </form>
 

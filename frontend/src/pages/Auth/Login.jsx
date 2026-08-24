@@ -42,8 +42,11 @@ export const Login = () => {
     return newErrors;
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setSuccessMessage('');
 
     const validationErrors = validateForm();
@@ -51,7 +54,11 @@ export const Login = () => {
       setErrors(validationErrors);
     } else {
       setErrors({});
-      setSuccessMessage('Login successful! (Frontend mock demonstration)');
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setSuccessMessage('Login successful! (Frontend mock demonstration)');
+      }, 300);
     }
   };
 
@@ -138,8 +145,8 @@ export const Login = () => {
           </a>
         </div>
 
-        <Button type="submit" variant="primary" size="lg" fullWidth icon={LogIn}>
-          Log In
+        <Button type="submit" variant="primary" size="lg" fullWidth icon={LogIn} loading={isSubmitting}>
+          {isSubmitting ? 'Logging in...' : 'Log In'}
         </Button>
       </form>
 

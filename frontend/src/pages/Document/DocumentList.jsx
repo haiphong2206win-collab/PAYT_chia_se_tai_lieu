@@ -36,10 +36,20 @@ export const DocumentList = () => {
 
   const searchQuery = initialSearch.trim().toLowerCase();
 
-  // Reset to page 1 whenever search query, filters, or sort change
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Reset to page 1 and trigger brief loading state whenever search query, filters, or sort change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedMajors, selectedTypes, selectedSubjects, sortValue]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedMajors, selectedTypes, selectedSubjects, sortValue, currentPage]);
 
   const filteredDocuments = MOCK_DOCUMENTS.filter((doc) => {
     // 1. Search Query condition (AND with all filters)
@@ -182,7 +192,7 @@ export const DocumentList = () => {
           </aside>
 
           <main className="grid-main-wrapper">
-            <DocumentGrid documents={paginatedDocuments} emptyMessage="No documents found" />
+            <DocumentGrid documents={paginatedDocuments} loading={isLoading} emptyMessage="No documents found" />
             {totalPages > 1 && (
               <Pagination
                 currentPage={currentPage}
