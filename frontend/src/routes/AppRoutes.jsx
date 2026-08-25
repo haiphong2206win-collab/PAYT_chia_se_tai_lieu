@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import AuthLayout from '../layouts/AuthLayout';
+import AdminRoutes from './AdminRoutes';
 
 import Home from '../pages/Home';
 import DocumentList from '../pages/Document/DocumentList';
@@ -13,6 +14,9 @@ import Register from '../pages/Auth/Register';
 export const AppRoutes = () => {
   return (
     <Routes>
+      {/* Admin Module Routes */}
+      <Route path="/admin/*" element={<AdminRoutes />} />
+
       {/* Auth Layout Pages */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
