@@ -1,10 +1,28 @@
-// Phase 1 Placeholder - Auth API endpoints
-export const loginApi = async () => {
-  // TODO Phase 2: POST /api/auth/login
-  return { success: true };
+import api from "./api";
+
+export const loginApi = async (credentials) => {
+  const response =
+    await api.post(
+      "/auth/login",
+      credentials
+    );
+
+  return response.data;
 };
 
-export const registerApi = async () => {
-  // TODO Phase 2: POST /api/auth/register
-  return { success: true };
+export const registerApi = async (userData) => {
+  const response =
+    await api.post(
+      "/auth/register",
+      userData
+    );
+
+  return response.data;
+};
+
+export const logoutApi = async () => {
+  const response =
+    await api.post("/auth/logout");
+
+  return response.data;
 };

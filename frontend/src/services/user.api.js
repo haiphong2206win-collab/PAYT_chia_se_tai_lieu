@@ -1,5 +1,19 @@
-// Phase 1 Placeholder - User Profile API endpoints
+import api from "./api";
+
 export const getUserProfileApi = async () => {
-  // TODO Phase 2: GET /api/user/profile
-  return null;
+  const response = await api.get("/users/profile");
+
+  return response.data;
+};
+
+export const updateUserProfileApi = async (userData) => {
+  const response = await api.patch("/users/profile", userData);
+
+  return response.data;
+};
+
+export const getMyDocumentsApi = async () => {
+  const response = await api.get("/users/my-documents");
+
+  return response.data;
 };
