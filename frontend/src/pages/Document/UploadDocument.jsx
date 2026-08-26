@@ -1,239 +1,615 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadCloud, ArrowLeft, CheckCircle2 } from 'lucide-react';
+
+import {
+  UploadCloud,
+  ArrowLeft,
+  CheckCircle2,
+} from 'lucide-react';
+
 import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
 import Button from '../../components/common/Button';
 import UploadZone from '../../components/document/UploadZone';
-import { MAJORS, FILE_TYPES } from '../../utils/constants';
+
+import { getCategories } from '../../services/category.api';
+import { uploadDocumentApi } from '../../services/document.api';
+
 import './UploadDocument.css';
 
 export const UploadDocument = () => {
   const navigate = useNavigate();
 
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [fileError, setFileError] = useState('');
+  // =====================================================
+  // 1. FILE STATE
+  // =====================================================
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [major, setMajor] = useState('');
-  const [subject, setSubject] = useState('');
-  const [documentType, setDocumentType] = useState('');
+  const [selectedFile, setSelectedFile] =
+    useState(null);
 
-  const [errors, setErrors] = useState({});
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [fileError, setFileError] =
+    useState('');
 
-  const handleFileSelect = (fileData, err) => {
+  // =====================================================
+  // 2. DOCUMENT FORM STATE
+  // =====================================================
+
+  const [title, setTitle] =
+    useState('');
+
+  const [description, setDescription] =
+    useState('');
+
+  const [categoryId, setCategoryId] =
+    useState('');
+
+  // =====================================================
+  // 3. CATEGORY STATE
+  // =====================================================
+
+  const [categories, setCategories] =
+    useState([]);
+
+  const [isLoadingCategories, setIsLoadingCategories] =
+    useState(false);
+
+  // =====================================================
+  // 4. FORM STATE
+  // =====================================================
+
+  const [errors, setErrors] =
+    useState({});
+
+  const [isUploading, setIsUploading] =
+    useState(false);
+
+  const [uploadProgress, setUploadProgress] =
+    useState(0);
+
+  const [successMessage, setSuccessMessage] =
+    useState('');
+
+  // =====================================================
+  // 5. LOAD CATEGORIES FROM BACKEND
+  // =====================================================
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoadingCategories(true);
+
+      try {
+        const response =
+          await getCategories();
+
+        console.log(
+          'Category API response:',
+          response
+        );
+
+        const categoryData =
+          response.data ||
+          response.categories ||
+          [];
+
+        setCategories(categoryData);
+      } catch (error) {
+        console.error(
+          'Category API error:',
+          error
+        );
+
+        setCategories([]);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // =====================================================
+  // 6. SELECT FILE
+  // =====================================================
+
+  const handleFileSelect = (
+    fileData,
+    err
+  ) => {
     if (err) {
       setSelectedFile(null);
       setFileError(err);
-      setErrors((prev) => ({ ...prev, file: err }));
-    } else {
-      setSelectedFile(fileData);
-      setFileError('');
-      setErrors((prev) => ({ ...prev, file: '' }));
-      setUploadProgress(0);
-      setSuccessMessage('');
 
-      if (!title && fileData?.name) {
-        const nameWithoutExt = fileData.name.substring(0, fileData.name.lastIndexOf('.')) || fileData.name;
-        setTitle(nameWithoutExt);
-        setErrors((prev) => ({ ...prev, title: '' }));
-      }
-      if (!documentType && fileData?.type) {
-        const matched = FILE_TYPES.find(
-          (t) => t.toUpperCase() === fileData.type.toUpperCase()
-        );
-        if (matched) {
-          setDocumentType(matched);
-          setErrors((prev) => ({ ...prev, documentType: '' }));
-        }
-      }
+      setErrors((prev) => ({
+        ...prev,
+        file: err,
+      }));
+
+      return;
+    }
+
+    setSelectedFile(fileData);
+    setFileError('');
+
+    setErrors((prev) => ({
+      ...prev,
+      file: '',
+    }));
+
+    setUploadProgress(0);
+    setSuccessMessage('');
+
+    // Nếu title đang trống
+    // thì lấy tên file làm title mặc định.
+    if (!title && fileData?.name) {
+      const nameWithoutExt =
+        fileData.name.substring(
+          0,
+          fileData.name.lastIndexOf('.')
+        ) || fileData.name;
+
+      setTitle(nameWithoutExt);
+
+      setErrors((prev) => ({
+        ...prev,
+        title: '',
+      }));
     }
   };
+
+  // =====================================================
+  // 7. REMOVE FILE
+  // =====================================================
 
   const handleFileRemove = () => {
     setSelectedFile(null);
     setFileError('');
-    setErrors((prev) => ({ ...prev, file: '' }));
+
+    setErrors((prev) => ({
+      ...prev,
+      file: '',
+    }));
+
     setUploadProgress(0);
     setSuccessMessage('');
   };
 
-  const handleSubmit = (e) => {
+  // =====================================================
+  // 8. SUBMIT DOCUMENT TO BACKEND
+  // =====================================================
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (isUploading) return;
+    if (isUploading) {
+      return;
+    }
 
     const newErrors = {};
 
+    // FILE
     if (!selectedFile) {
-      newErrors.file = 'Please select a document file.';
+      newErrors.file =
+        'Please select a document file.';
     } else if (fileError) {
-      newErrors.file = fileError;
+      newErrors.file =
+        fileError;
     }
 
+    // TITLE
     if (!title.trim()) {
-      newErrors.title = 'Document title is required.';
+      newErrors.title =
+        'Document title is required.';
     }
 
-    if (!major) {
-      newErrors.major = 'Academic major is required.';
+    // CATEGORY
+    if (!categoryId) {
+      newErrors.categoryId =
+        'Document category is required.';
     }
 
-    if (!subject.trim()) {
-      newErrors.subject = 'Course / Subject is required.';
-    }
-
-    if (!documentType) {
-      newErrors.documentType = 'Document type is required.';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
+    // Nếu validation lỗi
+    if (
+      Object.keys(newErrors).length > 0
+    ) {
       setErrors(newErrors);
       setSuccessMessage('');
+
       return;
     }
 
     setErrors({});
     setSuccessMessage('');
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(20);
 
-    setTimeout(() => setUploadProgress(30), 200);
-    setTimeout(() => setUploadProgress(60), 500);
-    setTimeout(() => {
+    try {
+      // =================================================
+      // FormData dùng khi request có FILE
+      // =================================================
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        'title',
+        title.trim()
+      );
+
+      formData.append(
+        'description',
+        description.trim()
+      );
+
+      formData.append(
+        'categoryId',
+        categoryId
+      );
+
+      /*
+        UploadZone có thể trả File trực tiếp
+        hoặc object có property file.
+
+        Đoạn này hỗ trợ cả 2 trường hợp.
+      */
+      const actualFile =
+        selectedFile.file ||
+        selectedFile.rawFile ||
+        selectedFile;
+
+      formData.append(
+        'file',
+        actualFile
+      );
+
+      setUploadProgress(50);
+
+      // ===============================================
+      // POST /documents
+      // ===============================================
+
+      const response =
+        await uploadDocumentApi(
+          formData
+        );
+
+      console.log(
+        'Upload Document API response:',
+        response
+      );
+
       setUploadProgress(100);
+
+      setSuccessMessage(
+        response.message ||
+        'Document uploaded successfully!'
+      );
+
+      // Sau khi upload thành công
+      // reset form
+      setSelectedFile(null);
+      setTitle('');
+      setDescription('');
+      setCategoryId('');
+      setFileError('');
+
+      // Có thể xem kết quả vài giây
+      // rồi chuyển về Profile.
+      setTimeout(() => {
+        navigate('/profile');
+      }, 1500);
+
+    } catch (error) {
+      console.error(
+        'Upload Document API error:',
+        error
+      );
+
+      setUploadProgress(0);
+
+      setErrors((prev) => ({
+        ...prev,
+
+        submit:
+          error.response?.data?.message ||
+          'Unable to upload document.',
+      }));
+
+    } finally {
       setIsUploading(false);
-      setSuccessMessage('Document uploaded successfully');
-    }, 800);
+    }
   };
+
+  // =====================================================
+  // 9. UI
+  // =====================================================
 
   return (
     <div className="payt-upload-page">
+
       <div className="container upload-container">
-        {/* Page Header */}
+
+        {/* PAGE HEADER */}
+
         <div className="upload-page-header">
-          <button type="button" className="back-btn" onClick={() => navigate(-1)}>
-            <ArrowLeft size={16} /> Back
+
+          <button
+            type="button"
+            className="back-btn"
+            onClick={() =>
+              navigate(-1)
+            }
+          >
+            <ArrowLeft size={16} />
+
+            Back
           </button>
-          <h1 className="upload-title">Upload Document</h1>
-          <p className="upload-subtitle">Share your study materials and help fellow students succeed.</p>
+
+          <h1 className="upload-title">
+            Upload Document
+          </h1>
+
+          <p className="upload-subtitle">
+            Share your study materials
+            and help fellow students
+            succeed.
+          </p>
+
         </div>
 
+        {/* SUCCESS */}
+
         {successMessage && (
+
           <div className="upload-success-alert">
-            <CheckCircle2 size={20} className="success-icon" />
-            <span>{successMessage}</span>
+
+            <CheckCircle2
+              size={20}
+              className="success-icon"
+            />
+
+            <span>
+              {successMessage}
+            </span>
+
           </div>
+
         )}
 
-        <form onSubmit={handleSubmit} className="upload-form-wrapper">
-          {/* 1. Drag & Drop File Upload Zone */}
-          <div className="upload-section">
-            <h3 className="section-heading">1. Select Document File</h3>
-            <UploadZone
-              selectedFile={selectedFile}
-              onFileSelect={handleFileSelect}
-              onFileRemove={handleFileRemove}
-              error={errors.file || fileError}
-              isUploading={isUploading}
-              uploadProgress={uploadProgress}
-            />
+        {/* BACKEND ERROR */}
+
+        {errors.submit && (
+
+          <div className="upload-error-alert">
+            {errors.submit}
           </div>
 
-          {/* 2. Document Details & Metadata Form */}
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          className="upload-form-wrapper"
+        >
+
+          {/* ===========================================
+              1. FILE
+          =========================================== */}
+
+          <div className="upload-section">
+
+            <h3 className="section-heading">
+              1. Select Document File
+            </h3>
+
+            <UploadZone
+              selectedFile={
+                selectedFile
+              }
+              onFileSelect={
+                handleFileSelect
+              }
+              onFileRemove={
+                handleFileRemove
+              }
+              error={
+                errors.file ||
+                fileError
+              }
+              isUploading={
+                isUploading
+              }
+              uploadProgress={
+                uploadProgress
+              }
+            />
+
+          </div>
+
+          {/* ===========================================
+              2. DOCUMENT INFORMATION
+          =========================================== */}
+
           <div className="upload-section payt-card form-card">
-            <h3 className="section-heading">2. Document Information</h3>
+
+            <h3 className="section-heading">
+              2. Document Information
+            </h3>
 
             <div className="form-fields-grid">
+
+              {/* TITLE */}
+
               <Input
                 label="Document Title"
                 placeholder="e.g. Data Structures Midterm Exam Prep Notes 2026"
                 value={title}
                 onChange={(e) => {
-                  setTitle(e.target.value);
-                  if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
+
+                  setTitle(
+                    e.target.value
+                  );
+
+                  if (errors.title) {
+                    setErrors(
+                      (prev) => ({
+                        ...prev,
+                        title: '',
+                      })
+                    );
+                  }
+
                 }}
-                error={errors.title}
+                error={
+                  errors.title
+                }
                 required
                 className="full-width-field"
               />
 
+              {/* DESCRIPTION */}
+
               <div className="payt-input-group full-width-field">
-                <label className="payt-input-label">Description</label>
+
+                <label className="payt-input-label">
+                  Description
+                </label>
+
                 <textarea
                   className="payt-textarea"
                   rows={4}
                   placeholder="Provide a detailed summary of what this document contains..."
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) =>
+                    setDescription(
+                      e.target.value
+                    )
+                  }
                 />
+
               </div>
 
-              <Select
-                label="Academic Major"
-                options={MAJORS}
-                value={major}
-                onChange={(e) => {
-                  setMajor(e.target.value);
-                  if (errors.major) setErrors((prev) => ({ ...prev, major: '' }));
-                }}
-                error={errors.major}
-                required
-              />
+              {/* CATEGORY */}
 
-              <Input
-                label="Course / Subject"
-                placeholder="e.g. Operating Systems"
-                value={subject}
-                onChange={(e) => {
-                  setSubject(e.target.value);
-                  if (errors.subject) setErrors((prev) => ({ ...prev, subject: '' }));
-                }}
-                error={errors.subject}
-                required
-              />
+              <div className="payt-input-group">
 
-              <Select
-                label="Document Type"
-                options={FILE_TYPES}
-                value={documentType}
-                onChange={(e) => {
-                  setDocumentType(e.target.value);
-                  if (errors.documentType) setErrors((prev) => ({ ...prev, documentType: '' }));
-                }}
-                error={errors.documentType}
-                required
-              />
+                <label className="payt-input-label">
+
+                  Document Category
+                  <span className="required">
+                    {' '}*
+                  </span>
+
+                </label>
+
+                <select
+                  className="payt-input"
+                  value={categoryId}
+                  disabled={
+                    isLoadingCategories
+                  }
+                  onChange={(e) => {
+
+                    setCategoryId(
+                      e.target.value
+                    );
+
+                    if (
+                      errors.categoryId
+                    ) {
+                      setErrors(
+                        (prev) => ({
+                          ...prev,
+                          categoryId:
+                            '',
+                        })
+                      );
+                    }
+
+                  }}
+                >
+
+                  <option value="">
+                    {isLoadingCategories
+                      ? 'Loading categories...'
+                      : 'Select category'}
+                  </option>
+
+                  {categories.map(
+                    (category) => (
+
+                      <option
+                        key={
+                          category.id
+                        }
+                        value={
+                          category.id
+                        }
+                      >
+
+                        {category.title ||
+                          category.name ||
+                          category.slug ||
+                          'Category'}
+
+                      </option>
+
+                    )
+                  )}
+
+                </select>
+
+                {errors.categoryId && (
+                  <span className="payt-input-error">
+                    {errors.categoryId}
+                  </span>
+                )}
+
+              </div>
+
             </div>
+
           </div>
 
-          {/* Form Action Controls */}
+          {/* ===========================================
+              ACTIONS
+          =========================================== */}
+
           <div className="upload-actions-bar">
+
             <Button
               type="button"
               variant="secondary"
               size="lg"
-              onClick={() => navigate(-1)}
-              disabled={isUploading}
+              onClick={() =>
+                navigate(-1)
+              }
+              disabled={
+                isUploading
+              }
             >
               Cancel
             </Button>
+
             <Button
               type="submit"
               variant="primary"
               size="lg"
               icon={UploadCloud}
-              disabled={isUploading}
+              disabled={
+                isUploading
+              }
             >
-              {isUploading ? `Uploading (${uploadProgress}%)...` : 'Upload Document'}
+
+              {isUploading
+                ? `Uploading (${uploadProgress}%)...`
+                : 'Upload Document'}
+
             </Button>
+
           </div>
+
         </form>
+
       </div>
+
     </div>
   );
 };

@@ -126,7 +126,34 @@ export const Profile = () => {
           response.data ||
           [];
 
-        setUploadedDocs(documents);
+        const mappedDocuments = documents.map((doc) => ({
+          id: doc.id,
+          title: doc.title,
+
+          major: doc.category_title || 'Uncategorized',
+
+          subject: '',
+
+          fileSize:
+            doc.file_size >= 1024 * 1024
+              ? `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB`
+              : `${(doc.file_size / 1024).toFixed(2)} KB`,
+
+          uploadDate: doc.created_at,
+
+          downloads: doc.download_count ?? 0,
+
+          categoryId: doc.category_id,
+          description: doc.description,
+          fileType: doc.file_type,
+          fileUrl: doc.file_url,
+          status: doc.status,
+          views: doc.view_count ?? 0,
+          reviewCount: doc.review_count ?? 0,
+          averageRating: doc.average_rating ?? 0,
+        }));
+
+        setUploadedDocs(mappedDocuments);
       } catch (error) {
         console.error(
           'My Documents API error:',
