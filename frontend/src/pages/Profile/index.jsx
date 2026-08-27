@@ -5,28 +5,24 @@ import {
 } from 'react';
 
 import {
-  Link,
   useNavigate,
 } from 'react-router-dom';
 
 import {
-  Shield,
-  FileText,
-  Download,
-  Eye,
-  Edit3,
-  Trash2,
   LogOut,
-  Upload,
   CheckCircle2,
   AlertTriangle,
-  FolderOpen,
-  Bookmark,
 } from 'lucide-react';
 
 import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
-import Modal from '../../components/common/Modal';
+
+import ProfileHeader from '../../components/profile/ProfileHeader';
+import ProfileStats from '../../components/profile/ProfileStats';
+import UploadedDocuments from '../../components/profile/UploadedDocuments';
+import SavedDocuments from '../../components/profile/SavedDocuments';
+import EditProfileModal from '../../components/profile/EditProfileModal';
+import EditDocumentModal from '../../components/profile/EditDocumentModal';
+import DeleteDocumentModal from '../../components/profile/DeleteDocumentModal';
 
 // =====================================================
 // USER API
@@ -1040,11 +1036,6 @@ export const Profile = () => {
   // ===================================================
   // PROFILE LOADING STATE
   // ===================================================
-  //
-  // Không dùng MOCK_USER để lấp dữ liệu trong lúc chờ.
-  // Chỉ render Profile khi GET /users/profile đã hoàn tất.
-  //
-  // ===================================================
 
   if (isLoadingProfile) {
     return (
@@ -1124,90 +1115,12 @@ export const Profile = () => {
           PROFILE BANNER
       ================================================= */}
 
-      <div className="profile-banner sunrise-bg-soft">
-
-        <div className="container profile-banner-container">
-
-          <div className="profile-avatar-wrap">
-
-            <img
-              src={
-                userProfile.avatar
-              }
-              alt={
-                userProfile.fullName
-              }
-              className="profile-avatar"
-            />
-
-            <div className="avatar-badge">
-
-              <CheckCircle2
-                size={18}
-                className="verified-icon"
-              />
-
-            </div>
-
-          </div>
-
-          <div className="profile-title-block">
-
-            <h1 className="profile-name">
-              {
-                userProfile.fullName
-              }
-            </h1>
-
-            <p className="profile-email">
-              {
-                userProfile.email
-              }
-            </p>
-
-            <div className="profile-role-pill">
-
-              <Shield size={14} />
-
-              <span>
-                {
-                  userProfile.role
-                }
-              </span>
-
-            </div>
-
-          </div>
-
-          <div className="profile-banner-actions">
-
-            <Button
-              variant="secondary"
-              size="md"
-              icon={Edit3}
-              onClick={
-                handleOpenEditProfile
-              }
-            >
-              Edit Profile
-            </Button>
-
-            <Button
-              variant="primary"
-              size="md"
-              icon={Upload}
-              onClick={() =>
-                navigate('/upload')
-              }
-            >
-              Upload Material
-            </Button>
-
-          </div>
-
-        </div>
-
-      </div>
+      <ProfileHeader
+        userProfile={userProfile}
+        onEditProfile={handleOpenEditProfile}
+        onUploadMaterial={() => navigate('/upload')}
+        variant="banner"
+      />
 
       {/* =================================================
           PROFILE BODY
@@ -1238,531 +1151,45 @@ export const Profile = () => {
             STATS
         ================================================= */}
 
-        <div className="profile-stats-grid">
-
-          <div className="payt-card stat-card">
-
-            <span className="stat-value">
-              {
-                uploadedDocs.length
-              }
-            </span>
-
-            <span className="stat-label">
-              Uploaded Documents
-            </span>
-
-          </div>
-
-          <div className="payt-card stat-card">
-
-            <span className="stat-value">
-
-              {
-                totalDownloadsReceived
-                  .toLocaleString()
-              }
-
-            </span>
-
-            <span className="stat-label">
-              Total Downloads Received
-            </span>
-
-          </div>
-
-          <div className="payt-card stat-card">
-
-            <span className="stat-value">
-
-              {
-                averageMaterialRating
-              } ★
-
-            </span>
-
-            <span className="stat-label">
-              Average Material Rating
-            </span>
-
-          </div>
-
-        </div>
+        <ProfileStats
+          uploadedCount={uploadedDocs.length}
+          totalDownloads={totalDownloadsReceived}
+          averageRating={averageMaterialRating}
+        />
 
         {/* =================================================
             ACCOUNT INFORMATION
         ================================================= */}
 
-        <div className="payt-card profile-info-card">
-
-          <div className="info-card-header">
-
-            <h3 className="section-title">
-              Account Information
-            </h3>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={Edit3}
-              onClick={
-                handleOpenEditProfile
-              }
-            >
-              Edit
-            </Button>
-
-          </div>
-
-          <div className="account-details-grid">
-
-            <div className="detail-item">
-
-              <span className="item-label">
-                Full Name
-              </span>
-
-              <span className="item-value">
-                {
-                  userProfile.fullName
-                }
-              </span>
-
-            </div>
-
-            <div className="detail-item">
-
-              <span className="item-label">
-                Email Address
-              </span>
-
-              <span className="item-value">
-                {
-                  userProfile.email
-                }
-              </span>
-
-            </div>
-
-            <div className="detail-item">
-
-              <span className="item-label">
-                Account Role
-              </span>
-
-              <span className="item-value">
-                {
-                  userProfile.role
-                }
-              </span>
-
-            </div>
-
-            <div className="detail-item">
-
-              <span className="item-label">
-                Joined Date
-              </span>
-
-              <span className="item-value">
-                {
-                  userProfile.joinedDate
-                    ? formatDate(
-                      userProfile.joinedDate
-                    )
-                    : 'Not available'
-                }
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
+        <ProfileHeader
+          userProfile={userProfile}
+          onEditProfile={handleOpenEditProfile}
+          variant="info"
+        />
 
         {/* =================================================
             MY UPLOADED DOCUMENTS
         ================================================= */}
 
-        <div className="payt-card profile-uploads-card">
-
-          <div className="info-card-header">
-
-            <h3 className="section-title">
-              My Uploaded Documents
-            </h3>
-
-            <span className="uploads-count-badge">
-
-              {
-                uploadedDocs.length
-              } items
-
-            </span>
-
-          </div>
-
-          {uploadedDocs.length === 0 ? (
-
-            <div className="empty-uploads">
-
-              <FolderOpen
-                size={48}
-                className="text-orange"
-              />
-
-              <p className="empty-title">
-                No uploaded documents yet
-              </p>
-
-              <p className="empty-subtext">
-                Share your lecture notes or study guides
-                with fellow students.
-              </p>
-
-              <Button
-                variant="primary"
-                size="sm"
-                icon={Upload}
-                onClick={() =>
-                  navigate('/upload')
-                }
-              >
-                Upload Your First Document
-              </Button>
-
-            </div>
-
-          ) : (
-
-            <div className="uploaded-list">
-
-              {uploadedDocs.map(
-                (doc) => (
-
-                  <div
-                    key={doc.id}
-                    className="uploaded-item"
-                  >
-
-                    <div className="uploaded-item-main">
-
-                      <div className="uploaded-file-icon">
-
-                        <FileText
-                          size={22}
-                          className="text-orange"
-                        />
-
-                      </div>
-
-                      <div className="uploaded-file-text">
-
-                        <Link
-                          to={`/documents/${doc.id}`}
-                          className="uploaded-title"
-                        >
-                          {doc.title}
-                        </Link>
-
-                        <div className="uploaded-submeta">
-
-                          <span className="badge badge-major">
-
-                            {
-                              getCategoryName(
-                                doc.categoryId,
-                                doc.major
-                              )
-                            }
-
-                          </span>
-
-                          <span>
-                            • {doc.fileSize}
-                          </span>
-
-                          <span>
-
-                            • Uploaded{' '}
-
-                            {
-                              formatDate(
-                                doc.uploadDate
-                              )
-                            }
-
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                    <div className="uploaded-item-actions">
-
-                      <div className="uploaded-dl-count">
-
-                        <Download
-                          size={14}
-                        />
-
-                        {' '}
-                        {doc.downloads}
-
-                      </div>
-
-                      {/* VIEW */}
-
-                      <Link
-                        to={`/documents/${doc.id}`}
-                      >
-
-                        <button
-                          type="button"
-                          className="action-icon-btn"
-                          title="View Document"
-                          aria-label="View Document"
-                        >
-                          <Eye size={16} />
-                        </button>
-
-                      </Link>
-
-                      {/* EDIT */}
-
-                      <button
-                        type="button"
-                        className="action-icon-btn"
-                        title="Edit Document"
-                        aria-label="Edit Document"
-                        onClick={() =>
-                          handleOpenEditDoc(
-                            doc
-                          )
-                        }
-                      >
-                        <Edit3 size={16} />
-                      </button>
-
-                      {/* DELETE */}
-
-                      <button
-                        type="button"
-                        className="action-icon-btn danger"
-                        title="Delete Document"
-                        aria-label="Delete Document"
-                        onClick={() =>
-                          handleOpenDeleteDoc(
-                            doc
-                          )
-                        }
-                      >
-                        <Trash2 size={16} />
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                )
-              )}
-
-            </div>
-
-          )}
-
-        </div>
+        <UploadedDocuments
+          uploadedDocs={uploadedDocs}
+          getCategoryName={getCategoryName}
+          onUploadMaterial={() => navigate('/upload')}
+          onEditDoc={handleOpenEditDoc}
+          onDeleteDoc={handleOpenDeleteDoc}
+        />
 
         {/* =================================================
             SAVED DOCUMENTS
         ================================================= */}
 
-        <div className="payt-card profile-uploads-card">
-
-          <div className="info-card-header">
-
-            <h3 className="section-title">
-              Saved Documents
-            </h3>
-
-            <span className="uploads-count-badge">
-
-              {
-                savedDocs.length
-              } items
-
-            </span>
-
-          </div>
-
-          {isLoadingSavedDocs ? (
-
-            <div className="empty-uploads">
-
-              <p className="empty-title">
-                Loading saved documents...
-              </p>
-
-            </div>
-
-          ) : savedDocsError ? (
-
-            <div className="empty-uploads">
-
-              <AlertTriangle
-                size={42}
-                className="warning-icon"
-              />
-
-              <p className="empty-title">
-                Unable to load saved documents
-              </p>
-
-              <p className="empty-subtext">
-                {savedDocsError}
-              </p>
-
-            </div>
-
-          ) : savedDocs.length === 0 ? (
-
-            <div className="empty-uploads">
-
-              <Bookmark
-                size={48}
-                className="text-orange"
-              />
-
-              <p className="empty-title">
-                No saved documents yet
-              </p>
-
-              <p className="empty-subtext">
-                Documents you save will appear here.
-              </p>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() =>
-                  navigate('/documents')
-                }
-              >
-                Browse Documents
-              </Button>
-
-            </div>
-
-          ) : (
-
-            <div className="uploaded-list">
-
-              {savedDocs.map(
-                (doc) => (
-
-                  <div
-                    key={doc.id}
-                    className="uploaded-item"
-                  >
-
-                    <div className="uploaded-item-main">
-
-                      <div className="uploaded-file-icon">
-
-                        <Bookmark
-                          size={22}
-                          className="text-orange"
-                        />
-
-                      </div>
-
-                      <div className="uploaded-file-text">
-
-                        <Link
-                          to={`/documents/${doc.id}`}
-                          className="uploaded-title"
-                        >
-                          {doc.title}
-                        </Link>
-
-                        <div className="uploaded-submeta">
-
-                          <span className="badge badge-major">
-
-                            {
-                              getCategoryName(
-                                doc.categoryId,
-                                doc.major
-                              )
-                            }
-
-                          </span>
-
-                          <span>
-                            • {doc.fileSize}
-                          </span>
-
-                          {doc.uploaderName && (
-
-                            <span>
-
-                              • By{' '}
-                              {
-                                doc.uploaderName
-                              }
-
-                            </span>
-
-                          )}
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                    <div className="uploaded-item-actions">
-
-                      <div className="uploaded-dl-count">
-
-                        <Download
-                          size={14}
-                        />
-
-                        {' '}
-                        {doc.downloads}
-
-                      </div>
-
-                      <Link
-                        to={`/documents/${doc.id}`}
-                      >
-
-                        <button
-                          type="button"
-                          className="action-icon-btn"
-                          title="View Document"
-                          aria-label="View Document"
-                        >
-                          <Eye size={16} />
-                        </button>
-
-                      </Link>
-
-                    </div>
-
-                  </div>
-
-                )
-              )}
-
-            </div>
-
-          )}
-
-        </div>
+        <SavedDocuments
+          savedDocs={savedDocs}
+          isLoadingSavedDocs={isLoadingSavedDocs}
+          savedDocsError={savedDocsError}
+          getCategoryName={getCategoryName}
+          onBrowseDocuments={() => navigate('/documents')}
+        />
 
         {/* =================================================
             LOGOUT
@@ -1798,469 +1225,58 @@ export const Profile = () => {
           DELETE DOCUMENT MODAL
       ================================================= */}
 
-      <Modal
-        isOpen={
-          !!deleteModalDoc
-        }
-        onClose={
-          handleCloseDeleteModal
-        }
-        title="Confirm Document Deletion"
-        footer={
-          <>
-
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={
-                handleCloseDeleteModal
-              }
-              disabled={
-                isDeletingDoc
-              }
-            >
-              Cancel
-            </Button>
-
-            <Button
-              variant="danger"
-              size="md"
-              onClick={
-                handleConfirmDelete
-              }
-              loading={
-                isDeletingDoc
-              }
-              disabled={
-                isDeletingDoc
-              }
-            >
-
-              {
-                isDeletingDoc
-                  ? 'Deleting...'
-                  : 'Delete Document'
-              }
-
-            </Button>
-
-          </>
-        }
-      >
-
-        {deleteModalDoc && (
-
-          <div className="delete-modal-content">
-
-            <AlertTriangle
-              size={36}
-              className="warning-icon"
-            />
-
-            <p>
-
-              Are you sure you want to delete{' '}
-
-              <strong>
-                "{deleteModalDoc.title}"
-              </strong>
-
-              ?
-
-            </p>
-
-            <p className="subtext">
-              This operation is permanent
-              and cannot be undone.
-            </p>
-
-            {deleteError && (
-
-              <p className="payt-input-error">
-                {deleteError}
-              </p>
-
-            )}
-
-          </div>
-
-        )}
-
-      </Modal>
+      <DeleteDocumentModal
+        isOpen={!!deleteModalDoc}
+        deleteModalDoc={deleteModalDoc}
+        isDeletingDoc={isDeletingDoc}
+        deleteError={deleteError}
+        onClose={handleCloseDeleteModal}
+        onConfirmDelete={handleConfirmDelete}
+      />
 
       {/* =================================================
           EDIT PROFILE MODAL
       ================================================= */}
 
-      <Modal
-        isOpen={
-          editProfileOpen
-        }
+      <EditProfileModal
+        isOpen={editProfileOpen}
         onClose={() => {
           if (!isSavingProfile) {
-            setEditProfileOpen(
-              false
-            );
-
+            setEditProfileOpen(false);
             setProfileError('');
           }
         }}
-        title="Edit Profile Information"
-        footer={
-          <>
-
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={() => {
-                if (!isSavingProfile) {
-                  setEditProfileOpen(
-                    false
-                  );
-
-                  setProfileError('');
-                }
-              }}
-              disabled={
-                isSavingProfile
-              }
-            >
-              Cancel
-            </Button>
-
-            <Button
-              variant="primary"
-              size="md"
-              onClick={
-                handleSaveProfile
-              }
-              loading={
-                isSavingProfile
-              }
-              disabled={
-                isSavingProfile
-              }
-            >
-
-              {
-                isSavingProfile
-                  ? 'Saving...'
-                  : 'Save Changes'
-              }
-
-            </Button>
-
-          </>
-        }
-      >
-
-        <form
-          onSubmit={
-            handleSaveProfile
-          }
-          className="edit-profile-modal-form"
-        >
-
-          <p className="modal-description">
-            Update your personal account information.
-          </p>
-
-          <div className="avatar-edit-preview-wrapper">
-
-            <img
-              src={
-                profileDraft.avatar ||
-                userProfile.avatar
-              }
-              alt="Avatar Preview"
-              className="avatar-edit-preview"
-            />
-
-            <Input
-              label="Avatar Image URL"
-              placeholder="https://..."
-              value={
-                profileDraft.avatar
-              }
-              onChange={(e) =>
-                setProfileDraft(
-                  (prev) => ({
-                    ...prev,
-
-                    avatar:
-                      e.target.value,
-                  })
-                )
-              }
-              className="full-width-field"
-            />
-
-          </div>
-
-          <div className="form-fields">
-
-            <Input
-              label="Full Name"
-              value={
-                profileDraft.fullName
-              }
-              onChange={(e) => {
-
-                setProfileDraft(
-                  (prev) => ({
-                    ...prev,
-
-                    fullName:
-                      e.target.value,
-                  })
-                );
-
-                setProfileError('');
-
-              }}
-              error={
-                profileError
-              }
-              required
-            />
-
-            <Input
-              label="Email Address"
-              type="email"
-              value={
-                profileDraft.email
-              }
-              onChange={(e) =>
-                setProfileDraft(
-                  (prev) => ({
-                    ...prev,
-
-                    email:
-                      e.target.value,
-                  })
-                )
-              }
-            />
-
-          </div>
-
-        </form>
-
-      </Modal>
+        profileDraft={profileDraft}
+        setProfileDraft={setProfileDraft}
+        userProfile={userProfile}
+        profileError={profileError}
+        setProfileError={setProfileError}
+        isSavingProfile={isSavingProfile}
+        onSaveProfile={handleSaveProfile}
+      />
 
       {/* =================================================
           EDIT DOCUMENT MODAL
       ================================================= */}
 
-      <Modal
-        isOpen={
-          !!editDocModal
-        }
+      <EditDocumentModal
+        isOpen={!!editDocModal}
+        editDocModal={editDocModal}
         onClose={() => {
-
           if (!isSavingDoc) {
             setEditDocModal(null);
             setDocError('');
           }
-
         }}
-        title="Edit Document Information"
-        footer={
-          <>
-
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={() => {
-
-                if (!isSavingDoc) {
-                  setEditDocModal(null);
-                  setDocError('');
-                }
-
-              }}
-              disabled={
-                isSavingDoc
-              }
-            >
-              Cancel
-            </Button>
-
-            <Button
-              variant="primary"
-              size="md"
-              onClick={
-                handleSaveDoc
-              }
-              loading={
-                isSavingDoc
-              }
-              disabled={
-                isSavingDoc
-              }
-            >
-
-              {
-                isSavingDoc
-                  ? 'Saving...'
-                  : 'Save Changes'
-              }
-
-            </Button>
-
-          </>
-        }
-      >
-
-        {editDocModal && (
-
-          <form
-            onSubmit={
-              handleSaveDoc
-            }
-            className="edit-profile-modal-form"
-          >
-
-            <p className="modal-description">
-              Update document title,
-              description and category.
-            </p>
-
-            <div className="form-fields">
-
-              <Input
-                label="Document Title"
-                value={
-                  docDraft.title
-                }
-                onChange={(e) => {
-
-                  setDocDraft(
-                    (prev) => ({
-                      ...prev,
-
-                      title:
-                        e.target.value,
-                    })
-                  );
-
-                  setDocError('');
-
-                }}
-                required
-              />
-
-              <div className="payt-input-group">
-
-                <label className="payt-input-label">
-                  Description
-                </label>
-
-                <textarea
-                  className="payt-textarea"
-                  rows={4}
-                  value={
-                    docDraft.description
-                  }
-                  onChange={(e) =>
-                    setDocDraft(
-                      (prev) => ({
-                        ...prev,
-
-                        description:
-                          e.target.value,
-                      })
-                    )
-                  }
-                  placeholder="Document description"
-                />
-
-              </div>
-
-              <div className="payt-input-group">
-
-                <label className="payt-input-label">
-                  Document Category
-                </label>
-
-                <select
-                  className="payt-input"
-                  value={
-                    docDraft.categoryId
-                  }
-                  disabled={
-                    isLoadingCategories ||
-                    isSavingDoc
-                  }
-                  onChange={(e) => {
-
-                    setDocDraft(
-                      (prev) => ({
-                        ...prev,
-
-                        categoryId:
-                          e.target.value,
-                      })
-                    );
-
-                    setDocError('');
-
-                  }}
-                >
-
-                  <option value="">
-
-                    {
-                      isLoadingCategories
-                        ? 'Loading categories...'
-                        : 'Select category'
-                    }
-
-                  </option>
-
-                  {categories.map(
-                    (category) => (
-
-                      <option
-                        key={
-                          category.id
-                        }
-                        value={
-                          category.id
-                        }
-                      >
-
-                        {
-                          category.title ||
-                          category.name ||
-                          category.slug ||
-                          'Category'
-                        }
-
-                      </option>
-
-                    )
-                  )}
-
-                </select>
-
-              </div>
-
-              {docError && (
-
-                <p className="payt-input-error">
-                  {docError}
-                </p>
-
-              )}
-
-            </div>
-
-          </form>
-
-        )}
-
-      </Modal>
+        docDraft={docDraft}
+        setDocDraft={setDocDraft}
+        docError={docError}
+        setDocError={setDocError}
+        isSavingDoc={isSavingDoc}
+        isLoadingCategories={isLoadingCategories}
+        categories={categories}
+        onSaveDoc={handleSaveDoc}
+      />
 
     </div>
   );
