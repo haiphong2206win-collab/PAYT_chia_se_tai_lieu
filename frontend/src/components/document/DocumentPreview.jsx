@@ -30,6 +30,7 @@ export const DocumentPreview = ({ document }) => {
             onClick={handlePrevPage}
             disabled={currentPage === 1}
             title="Previous Page"
+            aria-label="Previous Page"
           >
             <ChevronLeft size={18} />
           </button>
@@ -39,6 +40,7 @@ export const DocumentPreview = ({ document }) => {
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
             title="Next Page"
+            aria-label="Next Page"
           >
             <ChevronRight size={18} />
           </button>
@@ -47,6 +49,7 @@ export const DocumentPreview = ({ document }) => {
             className="preview-btn"
             onClick={() => setZoomLevel(Math.max(75, zoomLevel - 25))}
             title="Zoom Out"
+            aria-label="Zoom Out"
           >
             <ZoomOut size={18} />
           </button>
@@ -55,6 +58,7 @@ export const DocumentPreview = ({ document }) => {
             className="preview-btn"
             onClick={() => setZoomLevel(Math.min(150, zoomLevel + 25))}
             title="Zoom In"
+            aria-label="Zoom In"
           >
             <ZoomIn size={18} />
           </button>

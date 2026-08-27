@@ -173,6 +173,7 @@ export const UploadZone = ({
                 className="icon-action-btn"
                 onClick={openFilePicker}
                 title="Replace File"
+                aria-label="Replace File"
                 disabled={isUploading}
               >
                 <RefreshCw size={16} />
@@ -182,6 +183,7 @@ export const UploadZone = ({
                 className="icon-action-btn danger"
                 onClick={onFileRemove}
                 title="Remove File"
+                aria-label="Remove File"
                 disabled={isUploading}
               >
                 <X size={16} />

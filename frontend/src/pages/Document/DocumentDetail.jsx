@@ -3176,6 +3176,9 @@ export const DocumentDetail = () => {
                                         disabled={
                                           isUpdatingReview
                                         }
+                                        aria-label={
+                                          `${star} star rating`
+                                        }
                                         onClick={() => {
                                           setEditRating(
                                             star

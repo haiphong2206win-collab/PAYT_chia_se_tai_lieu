@@ -283,6 +283,11 @@ export const Login = () => {
                   !showPassword
                 )
               }
+              aria-label={
+                showPassword
+                  ? 'Hide password'
+                  : 'Show password'
+              }
             >
               {showPassword ? (
                 <EyeOff size={18} />

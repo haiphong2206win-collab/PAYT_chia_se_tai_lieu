@@ -477,6 +477,11 @@ export const Register = () => {
                   !showPassword
                 )
               }
+              aria-label={
+                showPassword
+                  ? 'Hide password'
+                  : 'Show password'
+              }
             >
               {showPassword ? (
                 <EyeOff size={18} />
@@ -513,6 +518,11 @@ export const Register = () => {
                 setShowConfirmPassword(
                   !showConfirmPassword
                 )
+              }
+              aria-label={
+                showConfirmPassword
+                  ? 'Hide confirm password'
+                  : 'Show confirm password'
               }
             >
               {showConfirmPassword ? (

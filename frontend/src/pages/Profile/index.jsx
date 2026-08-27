@@ -1523,6 +1523,7 @@ export const Profile = () => {
                           type="button"
                           className="action-icon-btn"
                           title="View Document"
+                          aria-label="View Document"
                         >
                           <Eye size={16} />
                         </button>
@@ -1535,6 +1536,7 @@ export const Profile = () => {
                         type="button"
                         className="action-icon-btn"
                         title="Edit Document"
+                        aria-label="Edit Document"
                         onClick={() =>
                           handleOpenEditDoc(
                             doc
@@ -1550,6 +1552,7 @@ export const Profile = () => {
                         type="button"
                         className="action-icon-btn danger"
                         title="Delete Document"
+                        aria-label="Delete Document"
                         onClick={() =>
                           handleOpenDeleteDoc(
                             doc
@@ -1741,6 +1744,7 @@ export const Profile = () => {
                           type="button"
                           className="action-icon-btn"
                           title="View Document"
+                          aria-label="View Document"
                         >
                           <Eye size={16} />
                         </button>
