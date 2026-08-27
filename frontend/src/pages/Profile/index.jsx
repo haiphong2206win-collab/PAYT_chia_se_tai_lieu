@@ -1,5 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import {
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
+
+import {
+  Link,
+  useNavigate,
+} from 'react-router-dom';
 
 import {
   Shield,
@@ -29,6 +37,7 @@ import {
   updateUserProfileApi,
   getMyDocumentsApi,
   getSavedDocumentsApi,
+  clearUserProfileCache,
 } from '../../services/user.api';
 
 // =====================================================
@@ -57,32 +66,27 @@ import {
 } from '../../services/auth.api';
 
 import {
-  MOCK_USER,
-} from '../../mock/user';
-
-import {
   formatDate,
 } from '../../utils/formatters';
 
 import './Profile.css';
 
 // =====================================================
-// HELPER: FORMAT FILE SIZE
-// =====================================================
-//
-// Backend trả file_size bằng bytes.
-// FE chuyển sang KB / MB để hiển thị.
-//
+// FORMAT FILE SIZE
 // =====================================================
 
 const formatFileSize = (bytes) => {
-  const size = Number(bytes || 0);
+  const size =
+    Number(bytes || 0);
 
   if (!size) {
     return '0 KB';
   }
 
-  if (size >= 1024 * 1024) {
+  if (
+    size >=
+    1024 * 1024
+  ) {
     return `${(
       size /
       (1024 * 1024)
@@ -96,62 +100,20 @@ const formatFileSize = (bytes) => {
 };
 
 // =====================================================
-// HELPER: MAP BACKEND DOCUMENT → UI DOCUMENT
-// =====================================================
-//
-// Dùng chung cho:
-//
-// GET /users/my-documents
-// GET /users/saved-document
-//
-// Backend dùng snake_case.
-// UI hiện tại dùng một số field khác.
-//
-// Ví dụ:
-//
-// Backend:
-// category_id
-// file_size
-// download_count
-//
-// UI:
-// categoryId
-// fileSize
-// downloads
-//
+// MAP BACKEND DOCUMENT → UI
 // =====================================================
 
 const mapBackendDocument = (doc) => ({
-  // ===================================================
-  // DOCUMENT ID
-  // ===================================================
-
   id:
     doc.id ||
     doc.document_id,
-
-  // ===================================================
-  // TITLE
-  // ===================================================
 
   title:
     doc.title ||
     'Untitled Document',
 
-  // ===================================================
-  // CATEGORY NAME
-  // ===================================================
-  //
-  // My Documents có category_title.
-  //
-  // Saved Documents hiện chỉ có category_id,
-  // nên nếu không có title thì tạm fallback.
-  //
-  // Sau đó getCategoryName() sẽ lấy tên thật
-  // từ danh sách GET /category.
-  //
-  // ===================================================
-
+  // UI cũ gọi là major,
+  // Backend thật là Category.
   major:
     doc.category_title ||
     doc.categoryTitle ||
@@ -167,109 +129,51 @@ const mapBackendDocument = (doc) => ({
     doc.document?.category?.name ||
     'Uncategorized',
 
-  // Backend hiện chưa có subject tương ứng
   subject: '',
-
-  // ===================================================
-  // FILE SIZE
-  // ===================================================
 
   fileSize:
     formatFileSize(
       doc.file_size
     ),
 
-  // ===================================================
-  // UPLOAD DATE
-  // ===================================================
-
   uploadDate:
     doc.created_at,
-
-  // ===================================================
-  // DOWNLOAD COUNT
-  // ===================================================
 
   downloads:
     Number(
       doc.download_count
     ) || 0,
 
-  // ===================================================
-  // CATEGORY ID
-  // ===================================================
-  //
-  // Rất quan trọng cho Saved Documents.
-  //
-  // Saved Documents API trả:
-  //
-  // category_id: "..."
-  //
-  // FE dùng ID này để tìm tên Category.
-  //
-  // ===================================================
-
   categoryId:
-    doc.category_id,
-
-  // ===================================================
-  // DESCRIPTION
-  // ===================================================
+    doc.category_id ||
+    doc.document?.category_id,
 
   description:
     doc.description || '',
 
-  // ===================================================
-  // FILE TYPE
-  // ===================================================
-
   fileType:
     doc.file_type,
-
-  // ===================================================
-  // FILE URL
-  // ===================================================
 
   fileUrl:
     doc.file_url,
 
-  // ===================================================
-  // STATUS
-  // ===================================================
-
   status:
     doc.status,
-
-  // ===================================================
-  // VIEW COUNT
-  // ===================================================
 
   views:
     Number(
       doc.view_count
     ) || 0,
 
-  // ===================================================
-  // REVIEW COUNT
-  // ===================================================
-
   reviewCount:
     Number(
       doc.review_count
     ) || 0,
 
-  // ===================================================
-  // AVERAGE RATING
-  // ===================================================
-
   averageRating:
     Number(
       doc.average_rating
     ) || 0,
-
-  // ===================================================
-  // UPLOADER NAME
-  // ===================================================
 
   uploaderName:
     doc.uploader_name ||
@@ -278,52 +182,42 @@ const mapBackendDocument = (doc) => ({
 });
 
 // =====================================================
-// PROFILE COMPONENT
+// PROFILE
 // =====================================================
 
 export const Profile = () => {
   const navigate =
     useNavigate();
 
-  // =====================================================
-  // 1. USER PROFILE STATE
-  // =====================================================
+  // ===================================================
+  // USER PROFILE
+  // ===================================================
 
   const [
     userProfile,
     setUserProfile,
-  ] = useState({
-    fullName:
-      MOCK_USER.fullName,
+  ] = useState(null);
 
-    email:
-      MOCK_USER.email,
+  const [
+    isLoadingProfile,
+    setIsLoadingProfile,
+  ] = useState(true);
 
-    role:
-      MOCK_USER.role,
+  const [
+    profileFetchError,
+    setProfileFetchError,
+  ] = useState('');
 
-    joinedDate:
-      MOCK_USER.joinedDate,
-
-    avatar:
-      MOCK_USER.avatar,
-
-    stats: {
-      ...MOCK_USER.stats,
-    },
-  });
-
-  // =====================================================
-  // 2. LOAD USER PROFILE
-  // =====================================================
-  //
-  // GET /users/profile
-  //
-  // =====================================================
+  // ===================================================
+  // GET PROFILE
+  // ===================================================
 
   useEffect(() => {
     const fetchUserProfile =
       async () => {
+        setIsLoadingProfile(true);
+        setProfileFetchError('');
+
         try {
           const response =
             await getUserProfileApi();
@@ -338,38 +232,57 @@ export const Profile = () => {
             response.data ||
             response;
 
-          setUserProfile(
-            (prev) => ({
-              ...prev,
+          const fullName =
+            profile.fullName ||
+            profile.full_name ||
+            '';
 
-              fullName:
-                profile.fullName ||
-                profile.full_name ||
-                prev.fullName,
+          setUserProfile({
+            id:
+              profile.id ||
+              profile.user_id ||
+              null,
 
-              email:
-                profile.email ||
-                prev.email,
+            fullName,
 
-              avatar:
-                profile.avatar ||
-                prev.avatar,
+            email:
+              profile.email ||
+              '',
 
-              role:
-                profile.role ||
-                prev.role,
+            avatar:
+              profile.avatar ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                fullName ||
+                'User'
+              )}`,
 
-              joinedDate:
-                profile.joinedDate ||
-                profile.joined_date ||
-                profile.created_at ||
-                prev.joinedDate,
-            })
-          );
+            role:
+              profile.role ||
+              '',
+
+            joinedDate:
+              profile.joinedDate ||
+              profile.joined_date ||
+              profile.created_at ||
+              '',
+          });
         } catch (error) {
           console.error(
             'Profile API error:',
             error
+          );
+
+          setUserProfile(null);
+
+          setProfileFetchError(
+            error.response
+              ?.data
+              ?.message ||
+            'Unable to load profile.'
+          );
+        } finally {
+          setIsLoadingProfile(
+            false
           );
         }
       };
@@ -377,22 +290,14 @@ export const Profile = () => {
     fetchUserProfile();
   }, []);
 
-  // =====================================================
-  // 3. MY UPLOADED DOCUMENTS STATE
-  // =====================================================
+  // ===================================================
+  // MY UPLOADED DOCUMENTS
+  // ===================================================
 
   const [
     uploadedDocs,
     setUploadedDocs,
   ] = useState([]);
-
-  // =====================================================
-  // 4. LOAD MY UPLOADED DOCUMENTS
-  // =====================================================
-  //
-  // GET /users/my-documents
-  //
-  // =====================================================
 
   const loadMyDocuments =
     useCallback(
@@ -411,13 +316,10 @@ export const Profile = () => {
             response.data ||
             [];
 
-          const mappedDocuments =
+          setUploadedDocs(
             documents.map(
               mapBackendDocument
-            );
-
-          setUploadedDocs(
-            mappedDocuments
+            )
           );
         } catch (error) {
           console.error(
@@ -435,17 +337,9 @@ export const Profile = () => {
     loadMyDocuments();
   }, [loadMyDocuments]);
 
-  // =====================================================
-  // 5. SAVED DOCUMENTS STATE
-  // =====================================================
-  //
-  // uploadedDocs
-  // = tài liệu do user upload.
-  //
-  // savedDocs
-  // = tài liệu user bấm Save to Library.
-  //
-  // =====================================================
+  // ===================================================
+  // SAVED DOCUMENTS
+  // ===================================================
 
   const [
     savedDocs,
@@ -462,26 +356,13 @@ export const Profile = () => {
     setSavedDocsError,
   ] = useState('');
 
-  // =====================================================
-  // 6. LOAD SAVED DOCUMENTS
-  // =====================================================
-  //
-  // GET /users/saved-document
-  //
-  // Backend thực tế trả:
-  //
-  // {
-  //   message: "...",
-  //   savedDocuments: [...],
-  //   pagination: {...}
-  // }
-  //
-  // =====================================================
-
   const loadSavedDocuments =
     useCallback(
       async () => {
-        setIsLoadingSavedDocs(true);
+        setIsLoadingSavedDocs(
+          true
+        );
+
         setSavedDocsError('');
 
         try {
@@ -492,17 +373,6 @@ export const Profile = () => {
             'Saved Documents API response:',
             response
           );
-
-          // ===============================================
-          // LẤY ARRAY DOCUMENT ĐÚNG TỪ RESPONSE
-          // ===============================================
-          //
-          // Backend thực tế:
-          // response.savedDocuments
-          //
-          // Các fallback bên dưới giữ để code an toàn.
-          //
-          // ===============================================
 
           const documents =
             response.savedDocuments ||
@@ -517,13 +387,10 @@ export const Profile = () => {
                 : []
             );
 
-          const mappedDocuments =
+          setSavedDocs(
             documents.map(
               mapBackendDocument
-            );
-
-          setSavedDocs(
-            mappedDocuments
+            )
           );
         } catch (error) {
           console.error(
@@ -548,16 +415,13 @@ export const Profile = () => {
       []
     );
 
-  // Khi Profile mở
-  // → tự động load Saved Documents.
-
   useEffect(() => {
     loadSavedDocuments();
   }, [loadSavedDocuments]);
 
-  // =====================================================
-  // 7. CATEGORY STATE
-  // =====================================================
+  // ===================================================
+  // CATEGORIES
+  // ===================================================
 
   const [
     categories,
@@ -568,16 +432,6 @@ export const Profile = () => {
     isLoadingCategories,
     setIsLoadingCategories,
   ] = useState(false);
-
-  // =====================================================
-  // 8. LOAD CATEGORY
-  // =====================================================
-  //
-  // GET /category
-  //
-  // Backend trả danh sách Category thật.
-  //
-  // =====================================================
 
   useEffect(() => {
     const fetchCategories =
@@ -600,7 +454,11 @@ export const Profile = () => {
             response.categories ||
             [];
 
-          setCategories(data);
+          setCategories(
+            Array.isArray(data)
+              ? data
+              : []
+          );
         } catch (error) {
           console.error(
             'Category API error:',
@@ -618,31 +476,9 @@ export const Profile = () => {
     fetchCategories();
   }, []);
 
-  // =====================================================
-  // 9. GET CATEGORY NAME FROM CATEGORY ID
-  // =====================================================
-  //
-  // Đây là phần sửa lỗi:
-  //
-  // Saved Documents API chỉ trả:
-  //
-  // category_id
-  //
-  // chứ KHÔNG trả:
-  //
-  // category_title
-  //
-  // Vì vậy:
-  //
-  // category_id
-  // ↓
-  // tìm trong categories
-  // ↓
-  // category.id === categoryId
-  // ↓
-  // lấy category.title
-  //
-  // =====================================================
+  // ===================================================
+  // CATEGORY ID → CATEGORY NAME
+  // ===================================================
 
   const getCategoryName = (
     categoryId,
@@ -663,9 +499,9 @@ export const Profile = () => {
     );
   };
 
-  // =====================================================
-  // 10. EDIT PROFILE STATE
-  // =====================================================
+  // ===================================================
+  // EDIT PROFILE STATE
+  // ===================================================
 
   const [
     editProfileOpen,
@@ -696,9 +532,9 @@ export const Profile = () => {
     setIsSavingProfile,
   ] = useState(false);
 
-  // =====================================================
-  // 11. EDIT DOCUMENT STATE
-  // =====================================================
+  // ===================================================
+  // EDIT DOCUMENT STATE
+  // ===================================================
 
   const [
     editDocModal,
@@ -724,9 +560,9 @@ export const Profile = () => {
     setIsSavingDoc,
   ] = useState(false);
 
-  // =====================================================
-  // 12. DELETE DOCUMENT STATE
-  // =====================================================
+  // ===================================================
+  // DELETE DOCUMENT STATE
+  // ===================================================
 
   const [
     deleteModalDoc,
@@ -743,43 +579,49 @@ export const Profile = () => {
     setDeleteError,
   ] = useState('');
 
-  // =====================================================
-  // 13. LOGOUT STATE
-  // =====================================================
+  // ===================================================
+  // LOGOUT
+  // ===================================================
 
   const [
     isLoggingOut,
     setIsLoggingOut,
   ] = useState(false);
 
-  // =====================================================
-  // 14. OPEN EDIT PROFILE
-  // =====================================================
+  // ===================================================
+  // OPEN EDIT PROFILE
+  // ===================================================
 
   const handleOpenEditProfile =
     () => {
+      if (!userProfile) {
+        return;
+      }
+
       setProfileDraft({
         fullName:
-          userProfile.fullName,
+          userProfile.fullName ||
+          '',
 
         email:
-          userProfile.email,
+          userProfile.email ||
+          '',
 
         avatar:
-          userProfile.avatar,
+          userProfile.avatar ||
+          '',
       });
 
       setProfileError('');
-      setEditProfileOpen(true);
+
+      setEditProfileOpen(
+        true
+      );
     };
 
-  // =====================================================
-  // 15. SAVE PROFILE
-  // =====================================================
-  //
-  // PATCH /users/profile
-  //
-  // =====================================================
+  // ===================================================
+  // PATCH PROFILE
+  // ===================================================
 
   const handleSaveProfile =
     async (e) => {
@@ -787,11 +629,25 @@ export const Profile = () => {
         e.preventDefault();
       }
 
-      if (
-        !profileDraft
-          .fullName
-          .trim()
-      ) {
+      const fullName =
+        String(
+          profileDraft.fullName ||
+          ''
+        ).trim();
+
+      const email =
+        String(
+          profileDraft.email ||
+          ''
+        ).trim();
+
+      const avatar =
+        String(
+          profileDraft.avatar ||
+          ''
+        ).trim();
+
+      if (!fullName) {
         setProfileError(
           'Full Name is required.'
         );
@@ -803,28 +659,19 @@ export const Profile = () => {
         return;
       }
 
-      setIsSavingProfile(true);
+      setIsSavingProfile(
+        true
+      );
+
       setProfileError('');
 
       try {
         const userData = {
-          fullName:
-            profileDraft
-              .fullName
-              .trim(),
-
-          email:
-            profileDraft
-              .email
-              .trim(),
-
-          avatar:
-            profileDraft
-              .avatar
-              .trim(),
+          fullName,
+          email,
+          avatar,
         };
 
-        // PATCH /users/profile
         const response =
           await updateUserProfileApi(
             userData
@@ -835,8 +682,8 @@ export const Profile = () => {
           response
         );
 
-        // Sau PATCH
-        // GET lại dữ liệu thật.
+        // updateUserProfileApi đã clear cache.
+        // GET lại profile thật.
         const profileResponse =
           await getUserProfileApi();
 
@@ -852,22 +699,16 @@ export const Profile = () => {
             fullName:
               updatedProfile.fullName ||
               updatedProfile.full_name ||
-              profileDraft
-                .fullName
-                .trim(),
+              fullName,
 
             email:
               updatedProfile.email ||
-              profileDraft
-                .email
-                .trim() ||
+              email ||
               prev.email,
 
             avatar:
               updatedProfile.avatar ||
-              profileDraft
-                .avatar
-                .trim() ||
+              avatar ||
               prev.avatar,
 
             role:
@@ -913,9 +754,9 @@ export const Profile = () => {
       }
     };
 
-  // =====================================================
-  // 16. OPEN EDIT DOCUMENT
-  // =====================================================
+  // ===================================================
+  // OPEN EDIT DOCUMENT
+  // ===================================================
 
   const handleOpenEditDoc =
     (doc) => {
@@ -935,13 +776,9 @@ export const Profile = () => {
       setDocError('');
     };
 
-  // =====================================================
-  // 17. SAVE DOCUMENT
-  // =====================================================
-  //
-  // PATCH /documents/:documentId
-  //
-  // =====================================================
+  // ===================================================
+  // PATCH DOCUMENT
+  // ===================================================
 
   const handleSaveDoc =
     async (e) => {
@@ -953,11 +790,19 @@ export const Profile = () => {
         return;
       }
 
-      if (
-        !docDraft
-          .title
-          .trim()
-      ) {
+      const title =
+        String(
+          docDraft.title ||
+          ''
+        ).trim();
+
+      const description =
+        String(
+          docDraft.description ||
+          ''
+        ).trim();
+
+      if (!title) {
         setDocError(
           'Document title is required.'
         );
@@ -965,9 +810,7 @@ export const Profile = () => {
         return;
       }
 
-      if (
-        !docDraft.categoryId
-      ) {
+      if (!docDraft.categoryId) {
         setDocError(
           'Document category is required.'
         );
@@ -984,19 +827,11 @@ export const Profile = () => {
 
       try {
         const documentData = {
-          title:
-            docDraft
-              .title
-              .trim(),
-
-          description:
-            docDraft
-              .description
-              .trim(),
+          title,
+          description,
 
           categoryId:
-            docDraft
-              .categoryId,
+            docDraft.categoryId,
         };
 
         console.log(
@@ -1004,7 +839,6 @@ export const Profile = () => {
           documentData
         );
 
-        // PATCH /documents/:documentId
         const response =
           await updateDocumentApi(
             editDocModal.id,
@@ -1016,7 +850,6 @@ export const Profile = () => {
           response
         );
 
-        // GET lại My Documents thật
         await loadMyDocuments();
 
         setEditDocModal(null);
@@ -1046,9 +879,9 @@ export const Profile = () => {
       }
     };
 
-  // =====================================================
-  // 18. OPEN DELETE DOCUMENT
-  // =====================================================
+  // ===================================================
+  // DELETE DOCUMENT
+  // ===================================================
 
   const handleOpenDeleteDoc =
     (doc) => {
@@ -1056,21 +889,12 @@ export const Profile = () => {
       setDeleteModalDoc(doc);
     };
 
-  // =====================================================
-  // 19. DELETE DOCUMENT
-  // =====================================================
-  //
-  // DELETE /documents/:documentId
-  //
-  // =====================================================
-
   const handleConfirmDelete =
     async () => {
-      if (!deleteModalDoc) {
-        return;
-      }
-
-      if (isDeletingDoc) {
+      if (
+        !deleteModalDoc ||
+        isDeletingDoc
+      ) {
         return;
       }
 
@@ -1078,7 +902,6 @@ export const Profile = () => {
       setDeleteError('');
 
       try {
-        // DELETE /documents/:documentId
         const response =
           await deleteDocumentApi(
             deleteModalDoc.id
@@ -1089,12 +912,10 @@ export const Profile = () => {
           response
         );
 
-        // GET lại danh sách thật
-        await loadMyDocuments();
-
-        // Nếu document đó từng được Save,
-        // load lại Saved Documents luôn.
-        await loadSavedDocuments();
+        await Promise.all([
+          loadMyDocuments(),
+          loadSavedDocuments(),
+        ]);
 
         setDeleteModalDoc(null);
 
@@ -1123,10 +944,6 @@ export const Profile = () => {
       }
     };
 
-  // =====================================================
-  // 20. CLOSE DELETE MODAL
-  // =====================================================
-
   const handleCloseDeleteModal =
     () => {
       if (isDeletingDoc) {
@@ -1137,13 +954,9 @@ export const Profile = () => {
       setDeleteError('');
     };
 
-  // =====================================================
-  // 21. LOGOUT
-  // =====================================================
-  //
-  // POST /auth/logout
-  //
-  // =====================================================
+  // ===================================================
+  // LOGOUT
+  // ===================================================
 
   const handleLogout =
     async () => {
@@ -1162,6 +975,10 @@ export const Profile = () => {
           response
         );
 
+        // Session đã hết.
+        // Không được giữ profile cache cũ.
+        clearUserProfileCache();
+
         navigate('/login');
       } catch (error) {
         console.error(
@@ -1173,9 +990,132 @@ export const Profile = () => {
       }
     };
 
-  // =====================================================
-  // 22. UI
-  // =====================================================
+  // ===================================================
+  // PROFILE STATS THẬT
+  // ===================================================
+
+  const totalDownloadsReceived =
+    uploadedDocs.reduce(
+      (total, doc) =>
+        total +
+        Number(
+          doc.downloads || 0
+        ),
+      0
+    );
+
+  const totalReviewCount =
+    uploadedDocs.reduce(
+      (total, doc) =>
+        total +
+        Number(
+          doc.reviewCount || 0
+        ),
+      0
+    );
+
+  const totalWeightedRating =
+    uploadedDocs.reduce(
+      (total, doc) =>
+        total +
+        (
+          Number(
+            doc.averageRating || 0
+          ) *
+          Number(
+            doc.reviewCount || 0
+          )
+        ),
+      0
+    );
+
+  const averageMaterialRating =
+    totalReviewCount > 0
+      ? (
+        totalWeightedRating /
+        totalReviewCount
+      ).toFixed(1)
+      : '0.0';
+
+  // ===================================================
+  // PROFILE LOADING STATE
+  // ===================================================
+  //
+  // Không dùng MOCK_USER để lấp dữ liệu trong lúc chờ.
+  // Chỉ render Profile khi GET /users/profile đã hoàn tất.
+  //
+  // ===================================================
+
+  if (isLoadingProfile) {
+    return (
+      <div className="payt-profile-page">
+
+        <div className="container profile-body-container">
+
+          <div className="payt-card">
+
+            Loading profile...
+
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
+
+  // ===================================================
+  // PROFILE ERROR STATE
+  // ===================================================
+
+  if (
+    profileFetchError ||
+    !userProfile
+  ) {
+    return (
+      <div className="payt-profile-page">
+
+        <div className="container profile-body-container">
+
+          <div className="payt-card">
+
+            <AlertTriangle
+              size={36}
+              className="warning-icon"
+            />
+
+            <h2>
+              Unable to load profile
+            </h2>
+
+            <p>
+              {
+                profileFetchError ||
+                'Profile data is unavailable.'
+              }
+            </p>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                navigate('/login')
+              }
+            >
+              Back to Login
+            </Button>
+
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
+
+  // ===================================================
+  // UI
+  // ===================================================
 
   return (
     <div className="payt-profile-page">
@@ -1257,9 +1197,7 @@ export const Profile = () => {
               size="md"
               icon={Upload}
               onClick={() =>
-                navigate(
-                  '/upload'
-                )
+                navigate('/upload')
               }
             >
               Upload Material
@@ -1277,7 +1215,7 @@ export const Profile = () => {
 
       <div className="container profile-body-container">
 
-        {/* SUCCESS MESSAGE */}
+        {/* SUCCESS */}
 
         {profileSuccess && (
 
@@ -1319,12 +1257,12 @@ export const Profile = () => {
           <div className="payt-card stat-card">
 
             <span className="stat-value">
+
               {
-                userProfile
-                  .stats
-                  .totalDownloads
+                totalDownloadsReceived
                   .toLocaleString()
               }
+
             </span>
 
             <span className="stat-label">
@@ -1336,11 +1274,11 @@ export const Profile = () => {
           <div className="payt-card stat-card">
 
             <span className="stat-value">
+
               {
-                userProfile
-                  .stats
-                  .averageRating
+                averageMaterialRating
               } ★
+
             </span>
 
             <span className="stat-label">
@@ -1429,6 +1367,10 @@ export const Profile = () => {
               <span className="item-value">
                 {
                   userProfile.joinedDate
+                    ? formatDate(
+                      userProfile.joinedDate
+                    )
+                    : 'Not available'
                 }
               </span>
 
@@ -1451,9 +1393,11 @@ export const Profile = () => {
             </h3>
 
             <span className="uploads-count-badge">
+
               {
                 uploadedDocs.length
               } items
+
             </span>
 
           </div>
@@ -1472,8 +1416,8 @@ export const Profile = () => {
               </p>
 
               <p className="empty-subtext">
-                Share your lecture notes or
-                study guides with fellow students.
+                Share your lecture notes or study guides
+                with fellow students.
               </p>
 
               <Button
@@ -1481,9 +1425,7 @@ export const Profile = () => {
                 size="sm"
                 icon={Upload}
                 onClick={() =>
-                  navigate(
-                    '/upload'
-                  )
+                  navigate('/upload')
                 }
               >
                 Upload Your First Document
@@ -1525,17 +1467,15 @@ export const Profile = () => {
 
                         <div className="uploaded-submeta">
 
-                          {/* =================================
-                              CATEGORY
-                          ================================= */}
-
                           <span className="badge badge-major">
+
                             {
                               getCategoryName(
                                 doc.categoryId,
                                 doc.major
                               )
                             }
+
                           </span>
 
                           <span>
@@ -1543,12 +1483,15 @@ export const Profile = () => {
                           </span>
 
                           <span>
+
                             • Uploaded{' '}
+
                             {
                               formatDate(
                                 doc.uploadDate
                               )
                             }
+
                           </span>
 
                         </div>
@@ -1631,16 +1574,6 @@ export const Profile = () => {
 
         {/* =================================================
             SAVED DOCUMENTS
-        =================================================
-        
-        Đây là tài liệu user đã bấm:
-
-        Save to Library
-
-        ở Document Detail.
-
-        GET /users/saved-document
-
         ================================================= */}
 
         <div className="payt-card profile-uploads-card">
@@ -1652,16 +1585,14 @@ export const Profile = () => {
             </h3>
 
             <span className="uploads-count-badge">
+
               {
                 savedDocs.length
               } items
+
             </span>
 
           </div>
-
-          {/* =============================================
-              LOADING STATE
-          ============================================= */}
 
           {isLoadingSavedDocs ? (
 
@@ -1674,10 +1605,6 @@ export const Profile = () => {
             </div>
 
           ) : savedDocsError ? (
-
-            // =============================================
-            // ERROR STATE
-            // =============================================
 
             <div className="empty-uploads">
 
@@ -1698,10 +1625,6 @@ export const Profile = () => {
 
           ) : savedDocs.length === 0 ? (
 
-            // =============================================
-            // EMPTY STATE
-            // =============================================
-
             <div className="empty-uploads">
 
               <Bookmark
@@ -1721,9 +1644,7 @@ export const Profile = () => {
                 variant="secondary"
                 size="sm"
                 onClick={() =>
-                  navigate(
-                    '/documents'
-                  )
+                  navigate('/documents')
                 }
               >
                 Browse Documents
@@ -1732,10 +1653,6 @@ export const Profile = () => {
             </div>
 
           ) : (
-
-            // =============================================
-            // SAVED DOCUMENT LIST
-            // =============================================
 
             <div className="uploaded-list">
 
@@ -1746,8 +1663,6 @@ export const Profile = () => {
                     key={doc.id}
                     className="uploaded-item"
                   >
-
-                    {/* DOCUMENT INFO */}
 
                     <div className="uploaded-item-main">
 
@@ -1771,23 +1686,15 @@ export const Profile = () => {
 
                         <div className="uploaded-submeta">
 
-                          {/* =================================
-                              CATEGORY
-                              
-                              Saved Documents không có
-                              category_title.
-                              
-                              Ta dùng category_id để tìm tên
-                              trong GET /category.
-                          ================================= */}
-
                           <span className="badge badge-major">
+
                             {
                               getCategoryName(
                                 doc.categoryId,
                                 doc.major
                               )
                             }
+
                           </span>
 
                           <span>
@@ -1797,10 +1704,12 @@ export const Profile = () => {
                           {doc.uploaderName && (
 
                             <span>
+
                               • By{' '}
                               {
                                 doc.uploaderName
                               }
+
                             </span>
 
                           )}
@@ -1810,8 +1719,6 @@ export const Profile = () => {
                       </div>
 
                     </div>
-
-                    {/* SAVED DOCUMENT ACTION */}
 
                     <div className="uploaded-item-actions">
 
@@ -1825,15 +1732,6 @@ export const Profile = () => {
                         {doc.downloads}
 
                       </div>
-
-                      {/* ===================================
-                          CHỈ VIEW
-                          
-                          Saved document có thể là tài liệu
-                          của user khác.
-                          
-                          Vì vậy không cho Edit/Delete ở đây.
-                      =================================== */}
 
                       <Link
                         to={`/documents/${doc.id}`}
@@ -1880,9 +1778,11 @@ export const Profile = () => {
             }
           >
 
-            {isLoggingOut
-              ? 'Logging out...'
-              : 'Logout Account'}
+            {
+              isLoggingOut
+                ? 'Logging out...'
+                : 'Logout Account'
+            }
 
           </Button>
 
@@ -1932,9 +1832,11 @@ export const Profile = () => {
               }
             >
 
-              {isDeletingDoc
-                ? 'Deleting...'
-                : 'Delete Document'}
+              {
+                isDeletingDoc
+                  ? 'Deleting...'
+                  : 'Delete Document'
+              }
 
             </Button>
 
@@ -1952,17 +1854,15 @@ export const Profile = () => {
             />
 
             <p>
+
               Are you sure you want to delete{' '}
 
               <strong>
-                "
-                {
-                  deleteModalDoc.title
-                }
-                "
+                "{deleteModalDoc.title}"
               </strong>
 
               ?
+
             </p>
 
             <p className="subtext">
@@ -1992,11 +1892,15 @@ export const Profile = () => {
         isOpen={
           editProfileOpen
         }
-        onClose={() =>
-          setEditProfileOpen(
-            false
-          )
-        }
+        onClose={() => {
+          if (!isSavingProfile) {
+            setEditProfileOpen(
+              false
+            );
+
+            setProfileError('');
+          }
+        }}
         title="Edit Profile Information"
         footer={
           <>
@@ -2004,10 +1908,17 @@ export const Profile = () => {
             <Button
               variant="secondary"
               size="md"
-              onClick={() =>
-                setEditProfileOpen(
-                  false
-                )
+              onClick={() => {
+                if (!isSavingProfile) {
+                  setEditProfileOpen(
+                    false
+                  );
+
+                  setProfileError('');
+                }
+              }}
+              disabled={
+                isSavingProfile
               }
             >
               Cancel
@@ -2022,11 +1933,16 @@ export const Profile = () => {
               loading={
                 isSavingProfile
               }
+              disabled={
+                isSavingProfile
+              }
             >
 
-              {isSavingProfile
-                ? 'Saving...'
-                : 'Save Changes'}
+              {
+                isSavingProfile
+                  ? 'Saving...'
+                  : 'Save Changes'
+              }
 
             </Button>
 
@@ -2042,11 +1958,8 @@ export const Profile = () => {
         >
 
           <p className="modal-description">
-            Update your personal account
-            information.
+            Update your personal account information.
           </p>
-
-          {/* AVATAR */}
 
           <div className="avatar-edit-preview-wrapper">
 
@@ -2082,8 +1995,6 @@ export const Profile = () => {
 
           <div className="form-fields">
 
-            {/* FULL NAME */}
-
             <Input
               label="Full Name"
               value={
@@ -2100,9 +2011,7 @@ export const Profile = () => {
                   })
                 );
 
-                if (profileError) {
-                  setProfileError('');
-                }
+                setProfileError('');
 
               }}
               error={
@@ -2110,8 +2019,6 @@ export const Profile = () => {
               }
               required
             />
-
-            {/* EMAIL */}
 
             <Input
               label="Email Address"
@@ -2148,10 +2055,7 @@ export const Profile = () => {
         onClose={() => {
 
           if (!isSavingDoc) {
-            setEditDocModal(
-              null
-            );
-
+            setEditDocModal(null);
             setDocError('');
           }
 
@@ -2166,10 +2070,7 @@ export const Profile = () => {
               onClick={() => {
 
                 if (!isSavingDoc) {
-                  setEditDocModal(
-                    null
-                  );
-
+                  setEditDocModal(null);
                   setDocError('');
                 }
 
@@ -2195,9 +2096,11 @@ export const Profile = () => {
               }
             >
 
-              {isSavingDoc
-                ? 'Saving...'
-                : 'Save Changes'}
+              {
+                isSavingDoc
+                  ? 'Saving...'
+                  : 'Save Changes'
+              }
 
             </Button>
 
@@ -2221,8 +2124,6 @@ export const Profile = () => {
 
             <div className="form-fields">
 
-              {/* TITLE */}
-
               <Input
                 label="Document Title"
                 value={
@@ -2239,15 +2140,11 @@ export const Profile = () => {
                     })
                   );
 
-                  if (docError) {
-                    setDocError('');
-                  }
+                  setDocError('');
 
                 }}
                 required
               />
-
-              {/* DESCRIPTION */}
 
               <div className="payt-input-group">
 
@@ -2276,8 +2173,6 @@ export const Profile = () => {
 
               </div>
 
-              {/* CATEGORY */}
-
               <div className="payt-input-group">
 
                 <label className="payt-input-label">
@@ -2304,18 +2199,18 @@ export const Profile = () => {
                       })
                     );
 
-                    if (docError) {
-                      setDocError('');
-                    }
+                    setDocError('');
 
                   }}
                 >
 
                   <option value="">
 
-                    {isLoadingCategories
-                      ? 'Loading categories...'
-                      : 'Select category'}
+                    {
+                      isLoadingCategories
+                        ? 'Loading categories...'
+                        : 'Select category'
+                    }
 
                   </option>
 
@@ -2331,10 +2226,12 @@ export const Profile = () => {
                         }
                       >
 
-                        {category.title ||
+                        {
+                          category.title ||
                           category.name ||
                           category.slug ||
-                          'Category'}
+                          'Category'
+                        }
 
                       </option>
 
@@ -2344,8 +2241,6 @@ export const Profile = () => {
                 </select>
 
               </div>
-
-              {/* EDIT ERROR */}
 
               {docError && (
 

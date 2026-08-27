@@ -34,6 +34,7 @@ import DocumentCard from '../../components/document/DocumentCard';
 
 import {
   getDocumentByIdApi,
+  getDocumentsApi,
   downloadDocumentApi,
   getDocumentSaveStatusApi,
   saveDocumentApi,
@@ -53,10 +54,6 @@ import {
 import {
   getUserProfileApi,
 } from '../../services/user.api';
-
-import {
-  MOCK_DOCUMENTS,
-} from '../../mock/documents';
 
 import {
   formatDate,
@@ -179,6 +176,180 @@ const mapBackendReview = (review) => ({
 });
 
 // =====================================================
+// HELPER: FORMAT FILE SIZE
+// =====================================================
+//
+// GET /documents trả file_size bằng bytes.
+// DocumentCard của UI đang hiển thị dạng KB / MB,
+// vì vậy map về đúng format trước khi render.
+//
+// =====================================================
+
+const formatRelatedFileSize = (bytes) => {
+  const size =
+    Number(bytes || 0);
+
+  if (!size) {
+    return '0 KB';
+  }
+
+  if (
+    size >=
+    1024 * 1024
+  ) {
+    return `${(
+      size /
+      (1024 * 1024)
+    ).toFixed(2)} MB`;
+  }
+
+  return `${(
+    size /
+    1024
+  ).toFixed(2)} KB`;
+};
+
+// =====================================================
+// HELPER: FORMAT FILE TYPE
+// =====================================================
+//
+// Ví dụ Backend:
+// application/pdf
+//
+// UI:
+// PDF
+//
+// =====================================================
+
+const formatRelatedFileType = (
+  fileType
+) => {
+  if (!fileType) {
+    return 'FILE';
+  }
+
+  return fileType
+    .split('/')
+    .pop()
+    .toUpperCase();
+};
+
+// =====================================================
+// HELPER: MAP BACKEND DOCUMENT → DOCUMENT CARD
+// =====================================================
+//
+// Related Documents dùng lại component DocumentCard.
+//
+// Vì Backend dùng snake_case còn DocumentCard đang dùng
+// object theo format UI cũ nên cần map trước:
+//
+// Backend              UI
+// category_title   →   major
+// category_id      →   categoryId
+// file_type        →   fileType
+// file_size        →   fileSize
+// created_at       →   uploadDate
+// download_count   →   downloads
+// view_count       →   views
+// average_rating   →   rating
+// review_count     →   reviewCount
+//
+// Không tạo dữ liệu giả cho Subject vì Backend hiện
+// chưa có field Subject tương ứng.
+//
+// =====================================================
+
+const mapBackendRelatedDocument = (
+  doc
+) => ({
+  id:
+    doc.id,
+
+  title:
+    doc.title ||
+    'Untitled Document',
+
+  description:
+    doc.description ||
+    '',
+
+  // UI cũ gọi field này là major,
+  // nhưng dữ liệu thật hiện tại là Category.
+  major:
+    doc.category_title ||
+    doc.category_name ||
+    'Uncategorized',
+
+  majorSlug:
+    doc.category_slug ||
+    doc.category_title ||
+    '',
+
+  categoryId:
+    doc.category_id,
+
+  // Backend chưa có Subject.
+  subject: '',
+
+  fileType:
+    formatRelatedFileType(
+      doc.file_type
+    ),
+
+  rawFileType:
+    doc.file_type,
+
+  fileSize:
+    formatRelatedFileSize(
+      doc.file_size
+    ),
+
+  fileUrl:
+    doc.file_url,
+
+  uploadDate:
+    doc.created_at,
+
+  downloads:
+    Number(
+      doc.download_count
+    ) || 0,
+
+  views:
+    Number(
+      doc.view_count
+    ) || 0,
+
+  rating:
+    Number(
+      doc.average_rating
+    ) || 0,
+
+  reviewCount:
+    Number(
+      doc.review_count
+    ) || 0,
+
+  status:
+    doc.status,
+
+  uploader: {
+    id:
+      doc.uploader_id ||
+      null,
+
+    name:
+      doc.uploader_name ||
+      doc.full_name ||
+      'Unknown User',
+
+    avatar:
+      doc.uploader_avatar ||
+      'https://ui-avatars.com/api/?name=User',
+  },
+});
+
+// =====================================================
 // DOCUMENT DETAIL COMPONENT
 // =====================================================
 
@@ -205,20 +376,33 @@ export const DocumentDetail = () => {
   ] = useState('');
 
   // =====================================================
-  // RELATED DOCUMENTS
+  // RELATED DOCUMENTS STATE
+  // =====================================================
   //
-  // Phần này hiện vẫn mock.
-  // Sẽ tích hợp Backend ở bước sau.
+  // Không dùng MOCK_DOCUMENTS nữa.
+  //
+  // Related Documents sẽ được lấy từ:
+  //
+  // GET /documents
+  //
+  // với categoryId của document hiện tại.
+  //
   // =====================================================
 
   const [
     relatedDocs,
-  ] = useState(
-    MOCK_DOCUMENTS.slice(
-      0,
-      3
-    )
-  );
+    setRelatedDocs,
+  ] = useState([]);
+
+  const [
+    isLoadingRelatedDocs,
+    setIsLoadingRelatedDocs,
+  ] = useState(false);
+
+  const [
+    relatedDocsError,
+    setRelatedDocsError,
+  ] = useState('');
 
   // =====================================================
   // 2. DOWNLOAD STATE
@@ -582,6 +766,181 @@ export const DocumentDetail = () => {
   useEffect(() => {
     loadDocumentDetail();
   }, [loadDocumentDetail]);
+
+  // =====================================================
+  // 11A. LOAD RELATED DOCUMENTS
+  // =====================================================
+  //
+  // Luồng:
+  //
+  // Document Detail
+  // ↓
+  // lấy categoryId của document hiện tại
+  // ↓
+  // GET /documents
+  //
+  // Query:
+  // {
+  //   categoryId,
+  //   page: 1,
+  //   limit: 4,
+  //   sortBy: 'created_at',
+  //   order: 'DESC'
+  // }
+  // ↓
+  // loại document đang xem
+  // ↓
+  // lấy tối đa 3 document
+  // ↓
+  // render DocumentCard
+  //
+  // Tại sao limit = 4?
+  //
+  // Nếu chính document hiện tại cũng xuất hiện trong
+  // GET /documents thì sau khi loại nó ra vẫn còn tối đa
+  // 3 tài liệu để hiển thị.
+  //
+  // Lưu ý:
+  // GET /documents hiện có thể chỉ trả document approved.
+  // Nếu category chưa có tài liệu approved khác,
+  // Related Documents sẽ hiển thị Empty State.
+  //
+  // =====================================================
+
+  const loadRelatedDocuments =
+    useCallback(
+      async () => {
+        // Chỉ gọi khi Detail đã load xong
+        // và đã có categoryId thật.
+        if (
+          !id ||
+          !document?.categoryId
+        ) {
+          setRelatedDocs([]);
+          setRelatedDocsError('');
+          return;
+        }
+
+        setIsLoadingRelatedDocs(
+          true
+        );
+
+        setRelatedDocsError('');
+
+        try {
+          const query = {
+            categoryId:
+              document.categoryId,
+
+            page:
+              1,
+
+            limit:
+              4,
+
+            sortBy:
+              'created_at',
+
+            order:
+              'DESC',
+          };
+
+          console.log(
+            'Related Documents query:',
+            query
+          );
+
+          // =============================================
+          // GET /documents?categoryId=...
+          // =============================================
+
+          const response =
+            await getDocumentsApi(
+              query
+            );
+
+          console.log(
+            'Related Documents API response:',
+            response
+          );
+
+          const backendDocuments =
+            response.documents ||
+            response.data?.documents ||
+            (
+              Array.isArray(
+                response.data
+              )
+                ? response.data
+                : []
+            );
+
+          // =============================================
+          // 1. Loại document đang xem.
+          // 2. Map Backend → UI.
+          // 3. Chỉ lấy tối đa 3 tài liệu.
+          // =============================================
+
+          const mappedRelatedDocs =
+            backendDocuments
+              .filter(
+                (doc) =>
+                  String(
+                    doc.id
+                  ) !==
+                  String(
+                    id
+                  )
+              )
+              .map(
+                mapBackendRelatedDocument
+              )
+              .slice(
+                0,
+                3
+              );
+
+          console.log(
+            'Mapped Related Documents for UI:',
+            mappedRelatedDocs
+          );
+
+          setRelatedDocs(
+            mappedRelatedDocs
+          );
+        } catch (error) {
+          console.error(
+            'Related Documents API error:',
+            error
+          );
+
+          setRelatedDocs([]);
+
+          setRelatedDocsError(
+            error.response
+              ?.data
+              ?.message ||
+            'Unable to load related documents.'
+          );
+        } finally {
+          setIsLoadingRelatedDocs(
+            false
+          );
+        }
+      },
+      [
+        id,
+        document?.categoryId,
+      ]
+    );
+
+  // Khi document hiện tại thay đổi
+  // hoặc categoryId thay đổi
+  // → load lại Related Documents.
+
+  useEffect(() => {
+    loadRelatedDocuments();
+  }, [loadRelatedDocuments]);
 
   // =====================================================
   // 12. LOAD REVIEWS
@@ -3087,8 +3446,12 @@ export const DocumentDetail = () => {
         </div>
 
         {/* =================================================
-            RELATED DOCUMENTS
-            HIỆN VẪN MOCK
+            RELATED DOCUMENTS - BACKEND THẬT
+
+            GET /documents
+            + categoryId của tài liệu hiện tại
+
+            Không còn dùng MOCK_DOCUMENTS.
         ================================================= */}
 
         <div className="related-docs-section">
@@ -3097,7 +3460,68 @@ export const DocumentDetail = () => {
             Related Documents
           </h2>
 
-          {relatedDocs.length === 0 ? (
+          {/* ===============================================
+              LOADING STATE
+          =============================================== */}
+
+          {isLoadingRelatedDocs ? (
+
+            <div className="payt-card payt-grid-empty">
+
+              <FileText
+                size={36}
+                className="text-orange"
+              />
+
+              <h3>
+                Loading related documents...
+              </h3>
+
+              <p>
+                Finding more study materials in the same category.
+              </p>
+
+            </div>
+
+          ) : relatedDocsError ? (
+
+            // =============================================
+            // ERROR STATE
+            // =============================================
+
+            <div className="payt-card payt-grid-empty">
+
+              <FileText
+                size={36}
+                className="text-orange"
+              />
+
+              <h3>
+                Unable to load related documents
+              </h3>
+
+              <p>
+                {relatedDocsError}
+              </p>
+
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={
+                  loadRelatedDocuments
+                }
+              >
+                Try Again
+              </Button>
+
+            </div>
+
+          ) : relatedDocs.length === 0 ? (
+
+            // =============================================
+            // EMPTY STATE
+            // =============================================
 
             <div className="payt-card payt-grid-empty">
 
@@ -3111,12 +3535,17 @@ export const DocumentDetail = () => {
               </h3>
 
               <p>
-                Check back later as more study materials are added.
+                No other approved study materials are available
+                in this category yet.
               </p>
 
             </div>
 
           ) : (
+
+            // =============================================
+            // SUCCESS STATE
+            // =============================================
 
             <div className="responsive-grid-3">
 

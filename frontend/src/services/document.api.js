@@ -4,12 +4,31 @@ import api from "./api";
 // 1. GET ALL DOCUMENTS
 
 
-export const getDocumentsApi = async () => {
-  const response = await api.get("/documents");
+// =====================================================
+// GET DOCUMENTS
+// GET /documents
+//
+// params có thể chứa:
+// page
+// limit
+// categoryId
+// sortBy
+// order
+// search (sẽ đối chiếu đúng contract khi test)
+// =====================================================
+
+export const getDocumentsApi = async (
+  params = {}
+) => {
+  const response = await api.get(
+    '/documents',
+    {
+      params,
+    }
+  );
 
   return response.data;
 };
-
 
 // 2. GET DOCUMENT DETAIL
 

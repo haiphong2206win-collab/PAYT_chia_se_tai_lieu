@@ -11,7 +11,7 @@ export const DocumentCard = ({ document, variant = 'standard' }) => {
     fileType = 'PDF',
     fileSize = '3.5 MB',
     downloads = 0,
-    rating = 4.8
+    rating = 0
   } = document;
 
   const renderBadgeClass = (type) => {
