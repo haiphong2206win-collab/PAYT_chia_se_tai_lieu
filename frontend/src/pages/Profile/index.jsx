@@ -218,11 +218,6 @@ export const Profile = () => {
           const response =
             await getUserProfileApi();
 
-          console.log(
-            'Profile API response:',
-            response
-          );
-
           const profile =
             response.user ||
             response.data ||
@@ -302,11 +297,6 @@ export const Profile = () => {
           const response =
             await getMyDocumentsApi();
 
-          console.log(
-            'My Documents API response:',
-            response
-          );
-
           const documents =
             response.documents ||
             response.data ||
@@ -364,11 +354,6 @@ export const Profile = () => {
         try {
           const response =
             await getSavedDocumentsApi();
-
-          console.log(
-            'Saved Documents API response:',
-            response
-          );
 
           const documents =
             response.savedDocuments ||
@@ -439,11 +424,6 @@ export const Profile = () => {
         try {
           const response =
             await getCategories();
-
-          console.log(
-            'Profile Category API response:',
-            response
-          );
 
           const data =
             response.data ||
@@ -673,11 +653,6 @@ export const Profile = () => {
             userData
           );
 
-        console.log(
-          'Update Profile API response:',
-          response
-        );
-
         // updateUserProfileApi đã clear cache.
         // GET lại profile thật.
         const profileResponse =
@@ -830,21 +805,11 @@ export const Profile = () => {
             docDraft.categoryId,
         };
 
-        console.log(
-          'Update Document payload:',
-          documentData
-        );
-
         const response =
           await updateDocumentApi(
             editDocModal.id,
             documentData
           );
-
-        console.log(
-          'Update Document API response:',
-          response
-        );
 
         await loadMyDocuments();
 
@@ -903,11 +868,6 @@ export const Profile = () => {
             deleteModalDoc.id
           );
 
-        console.log(
-          'Delete Document API response:',
-          response
-        );
-
         await Promise.all([
           loadMyDocuments(),
           loadSavedDocuments(),
@@ -963,19 +923,23 @@ export const Profile = () => {
       setIsLoggingOut(true);
 
       try {
-        const response =
-          await logoutApi();
+        await logoutApi();
 
-        console.log(
-          'Logout API response:',
-          response
-        );
-
-        // Session đã hết.
-        // Không được giữ profile cache cũ.
+        // Session phía Backend đã kết thúc.
+        // Không giữ profile cache cũ.
         clearUserProfileCache();
 
-        navigate('/login');
+        // Role hiện được lưu tạm ở sessionStorage
+        // sau khi POST /auth/login thành công.
+        // Logout phải xóa role để không giữ quyền
+        // Admin/Student của session cũ.
+        sessionStorage.removeItem(
+          'userRole'
+        );
+
+        navigate('/login', {
+          replace: true,
+        });
       } catch (error) {
         console.error(
           'Logout API error:',
@@ -1040,17 +1004,11 @@ export const Profile = () => {
   if (isLoadingProfile) {
     return (
       <div className="payt-profile-page">
-
         <div className="container profile-body-container">
-
           <div className="payt-card">
-
             Loading profile...
-
           </div>
-
         </div>
-
       </div>
     );
   }
@@ -1065,11 +1023,8 @@ export const Profile = () => {
   ) {
     return (
       <div className="payt-profile-page">
-
         <div className="container profile-body-container">
-
           <div className="payt-card">
-
             <AlertTriangle
               size={36}
               className="warning-icon"
@@ -1095,11 +1050,8 @@ export const Profile = () => {
             >
               Back to Login
             </Button>
-
           </div>
-
         </div>
-
       </div>
     );
   }
@@ -1131,9 +1083,7 @@ export const Profile = () => {
         {/* SUCCESS */}
 
         {profileSuccess && (
-
           <div className="profile-success-alert">
-
             <CheckCircle2
               size={18}
               className="success-icon"
@@ -1142,9 +1092,7 @@ export const Profile = () => {
             <span>
               {profileSuccess}
             </span>
-
           </div>
-
         )}
 
         {/* =================================================
@@ -1196,7 +1144,6 @@ export const Profile = () => {
         ================================================= */}
 
         <div className="profile-account-footer-actions">
-
           <Button
             variant="danger"
             size="md"
@@ -1208,17 +1155,13 @@ export const Profile = () => {
               isLoggingOut
             }
           >
-
             {
               isLoggingOut
                 ? 'Logging out...'
                 : 'Logout Account'
             }
-
           </Button>
-
         </div>
-
       </div>
 
       {/* =================================================
@@ -1277,7 +1220,6 @@ export const Profile = () => {
         categories={categories}
         onSaveDoc={handleSaveDoc}
       />
-
     </div>
   );
 };

@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import {
+  Link,
+  useNavigate,
+} from 'react-router-dom';
+
 import {
   Mail,
   Lock,
@@ -18,26 +22,36 @@ import './Auth.css';
 
 export const Login = () => {
   // =====================================================
+  // ROUTER
+  // =====================================================
+
+  const navigate = useNavigate();
+
+  // =====================================================
   // 1. FORM STATE
   // =====================================================
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] =
+    useState(false);
 
   // Hiện tại chỉ là state phía FE.
   // Chưa gửi rememberMe sang Backend.
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] =
+    useState(false);
 
   // Chứa lỗi validation FE + lỗi Backend
   const [errors, setErrors] = useState({});
 
   // Thông báo khi Backend login thành công
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] =
+    useState('');
 
   // Dùng để khóa nút trong lúc đang gửi request
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   // =====================================================
   // 2. VALIDATE EMAIL
@@ -48,7 +62,8 @@ export const Login = () => {
       return 'Email address is required';
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(val.trim())) {
       return 'Please enter a valid email address';
@@ -82,7 +97,8 @@ export const Login = () => {
       newErrors.email = emailErr;
     }
 
-    const passwordErr = validatePassword(password);
+    const passwordErr =
+      validatePassword(password);
 
     if (passwordErr) {
       newErrors.password = passwordErr;
@@ -108,7 +124,9 @@ export const Login = () => {
     // Kiểm tra form phía FE trước
     const validationErrors = validateForm();
 
-    if (Object.keys(validationErrors).length > 0) {
+    if (
+      Object.keys(validationErrors).length > 0
+    ) {
       setErrors(validationErrors);
       return;
     }
@@ -123,21 +141,79 @@ export const Login = () => {
         password: password,
       };
 
-      // Gọi POST /auth/login
-      const response = await loginApi(credentials);
+      // POST /auth/login
+      //
+      // Backend hiện trả dạng:
+      //
+      // {
+      //   message: "...",
+      //   user: {
+      //     id: "...",
+      //     email: "...",
+      //     role: "admin" | "student",
+      //     ...
+      //   }
+      // }
+      const response =
+        await loginApi(credentials);
 
-      // Không log password
-      console.log('Login API response:', response);
+      // =================================================
+      // ROLE TỪ BACKEND
+      // =================================================
 
-      // Hiển thị thông báo Backend trả về
-      setSuccessMessage(
-        response.message || 'Login successful!'
+      // BE hiện đã trả role trong response login.
+      // Tạm lưu role vào sessionStorage để
+      // AdminProtectedRoute sử dụng.
+      //
+      // Đây chỉ là trạng thái điều hướng phía FE.
+      // Quyền truy cập API Admin thật vẫn do Backend
+      // kiểm tra qua JWT cookie + role.
+      const userRole = String(
+        response?.user?.role || 'student'
+      ).toLowerCase();
+
+      sessionStorage.setItem(
+        'userRole',
+        userRole
       );
 
-      // Xóa password khỏi form sau khi login thành công
+      // Hiển thị message Backend trả về
+      setSuccessMessage(
+        response?.message ||
+        'Login successful!'
+      );
+
+      // Xóa password khỏi form sau khi login
       setPassword('');
+
+      // =================================================
+      // REDIRECT THEO ROLE
+      // =================================================
+
+      if (userRole === 'admin') {
+        // Admin đăng nhập xong đi thẳng vào
+        // khu vực quản trị.
+        navigate('/admin/documents', {
+          replace: true,
+        });
+
+        return;
+      }
+
+      // Student / user bình thường
+      // quay về Home.
+      navigate('/', {
+        replace: true,
+      });
     } catch (error) {
-      console.error('Login API error:', error);
+      console.error(
+        'Login API error:',
+        error
+      );
+
+      // Nếu login thất bại thì không giữ role
+      // cũ trong sessionStorage.
+      sessionStorage.removeItem('userRole');
 
       // Lấy message thật Backend trả về nếu có
       const apiMessage =
@@ -149,7 +225,8 @@ export const Login = () => {
         api: apiMessage,
       }));
     } finally {
-      // Dù thành công hay lỗi đều mở lại nút Login
+      // Dù thành công hay lỗi đều mở lại nút Login.
+      // Nếu navigate thành công component sẽ unmount.
       setIsSubmitting(false);
     }
   };
@@ -201,7 +278,8 @@ export const Login = () => {
     if (errors.password) {
       setErrors((prev) => ({
         ...prev,
-        password: validatePassword(val),
+        password:
+          validatePassword(val),
       }));
     }
   };
