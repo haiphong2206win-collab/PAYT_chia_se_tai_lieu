@@ -85,3 +85,24 @@ export const unsaveDocumentApi = async (documentId) => {
 
   return response.data;
 };
+
+
+// edit document 
+export const updateDocumentApi = async (documentId, data) => {
+  const response = await api.patch(
+    `/documents/${documentId}`,
+    data
+  );
+
+  return response.data;
+};
+
+
+// delete document
+export const deleteDocumentApi = async (documentId) => {
+  const response = await api.delete(
+    `/documents/${documentId}`
+  );
+
+  return response.data;
+};

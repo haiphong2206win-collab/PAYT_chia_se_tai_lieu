@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import {
@@ -17,19 +17,46 @@ import {
 
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import Select from '../../components/common/Select';
 import Modal from '../../components/common/Modal';
 
+// =====================================================
+// API LIÊN QUAN ĐẾN USER
+// =====================================================
 import {
   getUserProfileApi,
   updateUserProfileApi,
   getMyDocumentsApi,
 } from '../../services/user.api';
 
+// =====================================================
+// API LIÊN QUAN ĐẾN DOCUMENT
+// =====================================================
+// updateDocumentApi:
+// PATCH /documents/:documentId
+//
+// deleteDocumentApi:
+// DELETE /documents/:documentId
+// =====================================================
+import {
+  updateDocumentApi,
+  deleteDocumentApi,
+} from '../../services/document.api';
+
+// =====================================================
+// API CATEGORY
+// GET /category
+// Dùng để hiển thị category trong modal Edit Document
+// =====================================================
+import {
+  getCategories,
+} from '../../services/category.api';
+
+// =====================================================
+// AUTH API
+// =====================================================
 import { logoutApi } from '../../services/auth.api';
 
 import { MOCK_USER } from '../../mock/user';
-import { MAJORS } from '../../utils/constants';
 import { formatDate } from '../../utils/formatters';
 
 import './Profile.css';
@@ -40,9 +67,12 @@ export const Profile = () => {
   // =====================================================
   // 1. USER PROFILE STATE
   // =====================================================
+  //
+  // MOCK_USER hiện chỉ đóng vai trò fallback.
+  // Khi GET /users/profile thành công,
+  // dữ liệu Backend sẽ ghi đè lên các field tương ứng.
+  // =====================================================
 
-  // MOCK_USER hiện chỉ làm fallback.
-  // Dữ liệu thật từ Backend sẽ ghi đè các field tương ứng.
   const [userProfile, setUserProfile] = useState({
     fullName: MOCK_USER.fullName,
     email: MOCK_USER.email,
@@ -53,16 +83,43 @@ export const Profile = () => {
   });
 
   // =====================================================
-  // 2. LOAD PROFILE FROM BACKEND
+  // 2. LOAD PROFILE TỪ BACKEND
+  // =====================================================
+  //
+  // Khi trang Profile mount:
+  //
+  // FE
+  // ↓
+  // GET /users/profile
+  // ↓
+  // Backend
+  // ↓
+  // trả thông tin user
+  // ↓
+  // setUserProfile()
+  // ↓
+  // React render dữ liệu thật
+  //
   // =====================================================
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await getUserProfileApi();
+        const response =
+          await getUserProfileApi();
 
-        console.log('Profile API response:', response);
+        console.log(
+          'Profile API response:',
+          response
+        );
 
+        // Backend hiện có response dạng:
+        // {
+        //   message: "...",
+        //   data: {...}
+        // }
+        //
+        // Nhưng giữ thêm fallback để code an toàn hơn.
         const profile =
           response.user ||
           response.data ||
@@ -106,15 +163,35 @@ export const Profile = () => {
   }, []);
 
   // =====================================================
-  // 3. UPLOADED DOCUMENTS
+  // 3. MY UPLOADED DOCUMENTS STATE
   // =====================================================
 
-  const [uploadedDocs, setUploadedDocs] = useState([]);
+  const [uploadedDocs, setUploadedDocs] =
+    useState([]);
 
-  useEffect(() => {
-    const fetchMyDocuments = async () => {
+  // =====================================================
+  // 4. HÀM LOAD MY DOCUMENTS
+  // =====================================================
+  //
+  // Tách thành function riêng vì hàm này được dùng:
+  //
+  // - khi Profile vừa mở
+  // - sau khi Edit Document
+  // - sau khi Delete Document
+  //
+  // Mục đích:
+  // Sau mỗi thao tác thay đổi DB,
+  // FE GET lại dữ liệu thật từ Backend.
+  // Không tự giả định dữ liệu ở local.
+  //
+  // =====================================================
+
+  const loadMyDocuments = useCallback(
+    async () => {
       try {
-        const response = await getMyDocumentsApi();
+        // GET /users/my-documents
+        const response =
+          await getMyDocumentsApi();
 
         console.log(
           'My Documents API response:',
@@ -126,34 +203,89 @@ export const Profile = () => {
           response.data ||
           [];
 
-        const mappedDocuments = documents.map((doc) => ({
-          id: doc.id,
-          title: doc.title,
+        // =================================================
+        // MAP DỮ LIỆU BACKEND → FORMAT UI
+        // =================================================
+        //
+        // Backend:
+        // category_title
+        // category_id
+        // file_size
+        // download_count
+        // created_at
+        //
+        // UI cũ:
+        // major
+        // categoryId
+        // fileSize
+        // downloads
+        // uploadDate
+        //
+        // Đây là "adapter" giữa BE và FE.
+        // =================================================
 
-          major: doc.category_title || 'Uncategorized',
+        const mappedDocuments =
+          documents.map((doc) => ({
+            id: doc.id,
 
-          subject: '',
+            title:
+              doc.title,
 
-          fileSize:
-            doc.file_size >= 1024 * 1024
-              ? `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB`
-              : `${(doc.file_size / 1024).toFixed(2)} KB`,
+            // UI cũ đang dùng tên "major".
+            // Nhưng dữ liệu thật hiện tại là Category.
+            major:
+              doc.category_title ||
+              'Uncategorized',
 
-          uploadDate: doc.created_at,
+            // Backend hiện không có field subject.
+            subject: '',
 
-          downloads: doc.download_count ?? 0,
+            fileSize:
+              doc.file_size >=
+                1024 * 1024
+                ? `${(
+                  doc.file_size /
+                  (1024 * 1024)
+                ).toFixed(2)} MB`
+                : `${(
+                  doc.file_size /
+                  1024
+                ).toFixed(2)} KB`,
 
-          categoryId: doc.category_id,
-          description: doc.description,
-          fileType: doc.file_type,
-          fileUrl: doc.file_url,
-          status: doc.status,
-          views: doc.view_count ?? 0,
-          reviewCount: doc.review_count ?? 0,
-          averageRating: doc.average_rating ?? 0,
-        }));
+            uploadDate:
+              doc.created_at,
 
-        setUploadedDocs(mappedDocuments);
+            downloads:
+              doc.download_count ?? 0,
+
+            categoryId:
+              doc.category_id,
+
+            description:
+              doc.description || '',
+
+            fileType:
+              doc.file_type,
+
+            fileUrl:
+              doc.file_url,
+
+            status:
+              doc.status,
+
+            views:
+              doc.view_count ?? 0,
+
+            reviewCount:
+              doc.review_count ?? 0,
+
+            averageRating:
+              doc.average_rating ?? 0,
+          }));
+
+        setUploadedDocs(
+          mappedDocuments
+        );
       } catch (error) {
         console.error(
           'My Documents API error:',
@@ -162,77 +294,191 @@ export const Profile = () => {
 
         setUploadedDocs([]);
       }
+    },
+    []
+  );
+
+  // =====================================================
+  // 5. LOAD DOCUMENT KHI PROFILE MỞ
+  // =====================================================
+
+  useEffect(() => {
+    loadMyDocuments();
+  }, [loadMyDocuments]);
+
+  // =====================================================
+  // 6. CATEGORY STATE
+  // =====================================================
+  //
+  // Dùng cho Edit Document.
+  //
+  // Thay vì dùng MAJORS mock như trước,
+  // bây giờ lấy Category thật từ Backend.
+  //
+  // =====================================================
+
+  const [categories, setCategories] =
+    useState([]);
+
+  const [
+    isLoadingCategories,
+    setIsLoadingCategories,
+  ] = useState(false);
+
+  // =====================================================
+  // 7. LOAD CATEGORY
+  // =====================================================
+  //
+  // GET /category
+  //
+  // =====================================================
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoadingCategories(true);
+
+      try {
+        const response =
+          await getCategories();
+
+        console.log(
+          'Profile Category API response:',
+          response
+        );
+
+        const data =
+          response.data ||
+          response.categories ||
+          [];
+
+        setCategories(data);
+      } catch (error) {
+        console.error(
+          'Category API error:',
+          error
+        );
+
+        setCategories([]);
+      } finally {
+        setIsLoadingCategories(false);
+      }
     };
 
-    fetchMyDocuments();
+    fetchCategories();
   }, []);
 
-
   // =====================================================
-  // 4. EDIT PROFILE STATE
-  // =====================================================
-
-  const [editProfileOpen, setEditProfileOpen] =
-    useState(false);
-
-  const [profileDraft, setProfileDraft] =
-    useState({
-      fullName: '',
-      email: '',
-      avatar: '',
-    });
-
-  const [profileError, setProfileError] =
-    useState('');
-
-  const [profileSuccess, setProfileSuccess] =
-    useState('');
-
-  const [isSavingProfile, setIsSavingProfile] =
-    useState(false);
-
-  // =====================================================
-  // 5. EDIT DOCUMENT STATE
+  // 8. EDIT PROFILE STATE
   // =====================================================
 
-  const [editDocModal, setEditDocModal] =
-    useState(null);
+  const [
+    editProfileOpen,
+    setEditProfileOpen,
+  ] = useState(false);
 
-  const [docDraft, setDocDraft] =
-    useState({
-      title: '',
-      subject: '',
-      major: '',
-    });
+  const [
+    profileDraft,
+    setProfileDraft,
+  ] = useState({
+    fullName: '',
+    email: '',
+    avatar: '',
+  });
 
-  const [docError, setDocError] =
-    useState('');
+  const [
+    profileError,
+    setProfileError,
+  ] = useState('');
+
+  const [
+    profileSuccess,
+    setProfileSuccess,
+  ] = useState('');
+
+  const [
+    isSavingProfile,
+    setIsSavingProfile,
+  ] = useState(false);
 
   // =====================================================
-  // 6. DELETE DOCUMENT STATE
+  // 9. EDIT DOCUMENT STATE
   // =====================================================
 
+  // Document đang được edit
+  const [
+    editDocModal,
+    setEditDocModal,
+  ] = useState(null);
+
+  // Dữ liệu draft trong form Edit Document
+  const [
+    docDraft,
+    setDocDraft,
+  ] = useState({
+    title: '',
+    description: '',
+    categoryId: '',
+  });
+
+  // Error của Edit Document
+  const [
+    docError,
+    setDocError,
+  ] = useState('');
+
+  // Trạng thái đang PATCH document
+  const [
+    isSavingDoc,
+    setIsSavingDoc,
+  ] = useState(false);
+
+  // =====================================================
+  // 10. DELETE DOCUMENT STATE
+  // =====================================================
+
+  // Document user đang muốn xóa
   const [
     deleteModalDoc,
     setDeleteModalDoc,
   ] = useState(null);
 
+  // Trạng thái đang gọi DELETE API
+  const [
+    isDeletingDoc,
+    setIsDeletingDoc,
+  ] = useState(false);
+
+  // Hiển thị lỗi Delete nếu Backend trả lỗi
+  const [
+    deleteError,
+    setDeleteError,
+  ] = useState('');
+
   // =====================================================
-  // 7. LOGOUT STATE
+  // 11. LOGOUT STATE
   // =====================================================
 
-  const [isLoggingOut, setIsLoggingOut] =
-    useState(false);
+  const [
+    isLoggingOut,
+    setIsLoggingOut,
+  ] = useState(false);
 
   // =====================================================
-  // 8. OPEN EDIT PROFILE
+  // 12. OPEN EDIT PROFILE
   // =====================================================
 
   const handleOpenEditProfile = () => {
+    // Copy dữ liệu user hiện tại
+    // vào form draft.
     setProfileDraft({
-      fullName: userProfile.fullName,
-      email: userProfile.email,
-      avatar: userProfile.avatar,
+      fullName:
+        userProfile.fullName,
+
+      email:
+        userProfile.email,
+
+      avatar:
+        userProfile.avatar,
     });
 
     setProfileError('');
@@ -240,7 +486,19 @@ export const Profile = () => {
   };
 
   // =====================================================
-  // 9. SAVE PROFILE - BACKEND THẬT
+  // 13. SAVE PROFILE - BACKEND THẬT
+  // =====================================================
+  //
+  // FE
+  // ↓
+  // PATCH /users/profile
+  // ↓
+  // Backend update DB
+  // ↓
+  // GET /users/profile
+  // ↓
+  // FE render dữ liệu mới
+  //
   // =====================================================
 
   const handleSaveProfile = async (e) => {
@@ -248,7 +506,10 @@ export const Profile = () => {
       e.preventDefault();
     }
 
-    if (!profileDraft.fullName.trim()) {
+    // Validate FE
+    if (
+      !profileDraft.fullName.trim()
+    ) {
       setProfileError(
         'Full Name is required.'
       );
@@ -256,6 +517,7 @@ export const Profile = () => {
       return;
     }
 
+    // Tránh user double click
     if (isSavingProfile) {
       return;
     }
@@ -264,7 +526,7 @@ export const Profile = () => {
     setProfileError('');
 
     try {
-      // Dữ liệu FE gửi sang Backend
+      // Payload gửi sang Backend
       const userData = {
         fullName:
           profileDraft.fullName.trim(),
@@ -278,21 +540,17 @@ export const Profile = () => {
 
       // PATCH /users/profile
       const response =
-        await updateUserProfileApi(userData);
+        await updateUserProfileApi(
+          userData
+        );
 
       console.log(
         'Update Profile API response:',
         response
       );
 
-      /*
-        Sau khi PATCH thành công,
-        GET profile lại một lần nữa.
-
-        Mục đích:
-        Không tự giả định dữ liệu trong DB.
-        Backend trả gì thì FE hiển thị đúng dữ liệu đó.
-      */
+      // Sau khi PATCH thành công,
+      // GET profile lại từ Backend.
       const profileResponse =
         await getUserProfileApi();
 
@@ -335,8 +593,10 @@ export const Profile = () => {
           prev.joinedDate,
       }));
 
+      // Đóng modal
       setEditProfileOpen(false);
 
+      // Success message
       setProfileSuccess(
         response.message ||
         'Profile updated successfully!'
@@ -361,32 +621,67 @@ export const Profile = () => {
   };
 
   // =====================================================
-  // 10. OPEN EDIT DOCUMENT
+  // 14. OPEN EDIT DOCUMENT
   // =====================================================
 
   const handleOpenEditDoc = (doc) => {
+    // Lưu document đang được edit
     setEditDocModal(doc);
 
+    // Đưa dữ liệu hiện tại vào form.
     setDocDraft({
-      title: doc.title,
-      subject: doc.subject || '',
-      major: doc.major || '',
+      title:
+        doc.title || '',
+
+      description:
+        doc.description || '',
+
+      categoryId:
+        doc.categoryId || '',
     });
 
     setDocError('');
   };
 
   // =====================================================
-  // 11. SAVE DOCUMENT
+  // 15. SAVE DOCUMENT - BACKEND THẬT
+  // =====================================================
+  //
+  // Trước đây:
+  //
+  // Edit
+  // ↓
+  // setUploadedDocs()
+  // ↓
+  // chỉ đổi trên React local ❌
+  //
+  // Bây giờ:
+  //
+  // Edit
+  // ↓
+  // PATCH /documents/:documentId
+  // ↓
+  // Backend update DB
+  // ↓
+  // GET /users/my-documents
+  // ↓
+  // UI cập nhật
+  // ↓
+  // Refresh vẫn giữ ✅
+  //
   // =====================================================
 
-  // Hiện vẫn LOCAL.
-  // PATCH /documents/:id sẽ nối sau.
-  const handleSaveDoc = (e) => {
+  const handleSaveDoc = async (e) => {
     if (e) {
       e.preventDefault();
     }
 
+    // Phải có document đang edit
+    if (!editDocModal) {
+      return;
+    }
+
+    // Validate Title
     if (!docDraft.title.trim()) {
       setDocError(
         'Document title is required.'
@@ -395,54 +690,225 @@ export const Profile = () => {
       return;
     }
 
-    setUploadedDocs((prev) =>
-      prev.map((doc) =>
-        doc.id === editDocModal.id
-          ? {
-            ...doc,
+    // Validate Category
+    if (!docDraft.categoryId) {
+      setDocError(
+        'Document category is required.'
+      );
 
-            title:
-              docDraft.title.trim(),
+      return;
+    }
 
-            subject:
-              docDraft.subject.trim() ||
-              doc.subject,
+    // Chống double click
+    if (isSavingDoc) {
+      return;
+    }
 
-            major:
-              docDraft.major ||
-              doc.major,
-          }
-          : doc
-      )
-    );
-
+    setIsSavingDoc(true);
     setDocError('');
-    setEditDocModal(null);
+
+    try {
+      // ===============================================
+      // PAYLOAD GỬI SANG BACKEND
+      // ===============================================
+
+      const documentData = {
+        title:
+          docDraft.title.trim(),
+
+        description:
+          docDraft.description.trim(),
+
+        categoryId:
+          docDraft.categoryId,
+      };
+
+      console.log(
+        'Update Document payload:',
+        documentData
+      );
+
+      // ===============================================
+      // PATCH /documents/:documentId
+      // ===============================================
+
+      const response =
+        await updateDocumentApi(
+          editDocModal.id,
+          documentData
+        );
+
+      console.log(
+        'Update Document API response:',
+        response
+      );
+
+      // ===============================================
+      // GET LẠI MY DOCUMENTS TỪ BACKEND
+      // ===============================================
+      //
+      // Không tự sửa local state.
+      // Backend trả gì thì UI hiển thị đúng dữ liệu đó.
+      // ===============================================
+
+      await loadMyDocuments();
+
+      // Đóng Edit modal
+      setEditDocModal(null);
+
+      setProfileSuccess(
+        response.message ||
+        'Document updated successfully!'
+      );
+
+      setTimeout(() => {
+        setProfileSuccess('');
+      }, 3000);
+    } catch (error) {
+      console.error(
+        'Update Document API error:',
+        error
+      );
+
+      setDocError(
+        error.response?.data?.message ||
+        'Unable to update document.'
+      );
+    } finally {
+      setIsSavingDoc(false);
+    }
   };
 
   // =====================================================
-  // 12. DELETE DOCUMENT
+  // 16. OPEN DELETE DOCUMENT MODAL
   // =====================================================
 
-  // Hiện vẫn LOCAL.
-  // DELETE /documents/:id sẽ nối sau.
-  const handleConfirmDelete = () => {
+  const handleOpenDeleteDoc = (doc) => {
+    // Xóa error từ lần Delete trước.
+    setDeleteError('');
+
+    // Lưu document user muốn xóa.
+    setDeleteModalDoc(doc);
+  };
+
+  // =====================================================
+  // 17. DELETE DOCUMENT - BACKEND THẬT
+  // =====================================================
+  //
+  // Trước đây:
+  //
+  // Delete
+  // ↓
+  // setUploadedDocs(filter)
+  // ↓
+  // chỉ xóa trên UI
+  // ↓
+  // refresh → document quay lại ❌
+  //
+  // Bây giờ:
+  //
+  // Delete
+  // ↓
+  // DELETE /documents/:documentId
+  // ↓
+  // Backend xóa DB
+  // ↓
+  // GET /users/my-documents
+  // ↓
+  // UI cập nhật
+  // ↓
+  // refresh vẫn mất ✅
+  //
+  // =====================================================
+
+  const handleConfirmDelete = async () => {
+    // Không có document thì không làm gì.
     if (!deleteModalDoc) {
       return;
     }
 
-    setUploadedDocs((prev) =>
-      prev.filter(
-        (doc) =>
-          doc.id !== deleteModalDoc.id
-      )
-    );
+    // Tránh double click Delete.
+    if (isDeletingDoc) {
+      return;
+    }
 
-    setDeleteModalDoc(null);
+    setIsDeletingDoc(true);
+    setDeleteError('');
+
+    try {
+      // ===============================================
+      // DELETE /documents/:documentId
+      // ===============================================
+
+      const response =
+        await deleteDocumentApi(
+          deleteModalDoc.id
+        );
+
+      console.log(
+        'Delete Document API response:',
+        response
+      );
+
+      // ===============================================
+      // GET LẠI DOCUMENT THẬT TỪ BACKEND
+      // ===============================================
+
+      await loadMyDocuments();
+
+      // Đóng modal sau khi Backend xóa thành công
+      setDeleteModalDoc(null);
+
+      // Hiển thị thông báo thành công
+      setProfileSuccess(
+        response.message ||
+        'Document deleted successfully!'
+      );
+
+      setTimeout(() => {
+        setProfileSuccess('');
+      }, 3000);
+    } catch (error) {
+      console.error(
+        'Delete Document API error:',
+        error
+      );
+
+      // Nếu Backend trả message,
+      // ưu tiên hiển thị message Backend.
+      setDeleteError(
+        error.response?.data?.message ||
+        'Unable to delete document.'
+      );
+    } finally {
+      setIsDeletingDoc(false);
+    }
   };
 
   // =====================================================
-  // 13. LOGOUT
+  // 18. CLOSE DELETE MODAL
+  // =====================================================
+
+  const handleCloseDeleteModal = () => {
+    // Không cho đóng modal
+    // trong lúc đang gửi DELETE request.
+    if (isDeletingDoc) {
+      return;
+    }
+
+    setDeleteModalDoc(null);
+    setDeleteError('');
+  };
+
+  // =====================================================
+  // 19. LOGOUT
+  // =====================================================
+  //
+  // POST /auth/logout
+  //
+  // Backend clear cookie JWT.
+  // Sau đó FE chuyển user về Login.
+  //
   // =====================================================
 
   const handleLogout = async () => {
@@ -473,18 +939,22 @@ export const Profile = () => {
   };
 
   // =====================================================
-  // 14. UI
+  // 20. UI
   // =====================================================
 
   return (
     <div className="payt-profile-page">
 
-      {/* PROFILE BANNER */}
+      {/* =================================================
+          PROFILE BANNER
+      ================================================= */}
 
       <div className="profile-banner sunrise-bg-soft">
+
         <div className="container profile-banner-container">
 
           <div className="profile-avatar-wrap">
+
             <img
               src={userProfile.avatar}
               alt={userProfile.fullName}
@@ -492,11 +962,14 @@ export const Profile = () => {
             />
 
             <div className="avatar-badge">
+
               <CheckCircle2
                 size={18}
                 className="verified-icon"
               />
+
             </div>
+
           </div>
 
           <div className="profile-title-block">
@@ -510,11 +983,13 @@ export const Profile = () => {
             </p>
 
             <div className="profile-role-pill">
+
               <Shield size={14} />
 
               <span>
                 {userProfile.role}
               </span>
+
             </div>
 
           </div>
@@ -525,7 +1000,9 @@ export const Profile = () => {
               variant="secondary"
               size="md"
               icon={Edit3}
-              onClick={handleOpenEditProfile}
+              onClick={
+                handleOpenEditProfile
+              }
             >
               Edit Profile
             </Button>
@@ -544,13 +1021,19 @@ export const Profile = () => {
           </div>
 
         </div>
+
       </div>
 
-      {/* PROFILE BODY */}
+      {/* =================================================
+          PROFILE BODY
+      ================================================= */}
 
       <div className="container profile-body-container">
 
+        {/* SUCCESS MESSAGE */}
+
         {profileSuccess && (
+
           <div className="profile-success-alert">
 
             <CheckCircle2
@@ -563,9 +1046,12 @@ export const Profile = () => {
             </span>
 
           </div>
+
         )}
 
-        {/* STATS */}
+        {/* =================================================
+            STATS
+        ================================================= */}
 
         <div className="profile-stats-grid">
 
@@ -607,7 +1093,9 @@ export const Profile = () => {
 
         </div>
 
-        {/* ACCOUNT INFORMATION */}
+        {/* =================================================
+            ACCOUNT INFORMATION
+        ================================================= */}
 
         <div className="payt-card profile-info-card">
 
@@ -621,7 +1109,9 @@ export const Profile = () => {
               variant="ghost"
               size="sm"
               icon={Edit3}
-              onClick={handleOpenEditProfile}
+              onClick={
+                handleOpenEditProfile
+              }
             >
               Edit
             </Button>
@@ -682,7 +1172,9 @@ export const Profile = () => {
 
         </div>
 
-        {/* MY UPLOADED DOCUMENTS */}
+        {/* =================================================
+            MY UPLOADED DOCUMENTS
+        ================================================= */}
 
         <div className="payt-card profile-uploads-card">
 
@@ -697,6 +1189,8 @@ export const Profile = () => {
             </span>
 
           </div>
+
+          {/* EMPTY STATE */}
 
           {uploadedDocs.length === 0 ? (
 
@@ -731,6 +1225,10 @@ export const Profile = () => {
 
           ) : (
 
+            // =============================================
+            // DOCUMENT LIST
+            // =============================================
+
             <div className="uploaded-list">
 
               {uploadedDocs.map((doc) => (
@@ -739,6 +1237,8 @@ export const Profile = () => {
                   key={doc.id}
                   className="uploaded-item"
                 >
+
+                  {/* DOCUMENT INFO */}
 
                   <div className="uploaded-item-main">
 
@@ -767,10 +1267,6 @@ export const Profile = () => {
                         </span>
 
                         <span>
-                          {doc.subject}
-                        </span>
-
-                        <span>
                           • {doc.fileSize}
                         </span>
 
@@ -787,7 +1283,11 @@ export const Profile = () => {
 
                   </div>
 
+                  {/* DOCUMENT ACTIONS */}
+
                   <div className="uploaded-item-actions">
+
+                    {/* DOWNLOAD COUNT */}
 
                     <div className="uploaded-dl-count">
 
@@ -797,6 +1297,8 @@ export const Profile = () => {
                       {doc.downloads}
 
                     </div>
+
+                    {/* VIEW DOCUMENT */}
 
                     <Link
                       to={`/documents/${doc.id}`}
@@ -812,23 +1314,31 @@ export const Profile = () => {
 
                     </Link>
 
+                    {/* EDIT DOCUMENT */}
+
                     <button
                       type="button"
                       className="action-icon-btn"
                       title="Edit Document"
                       onClick={() =>
-                        handleOpenEditDoc(doc)
+                        handleOpenEditDoc(
+                          doc
+                        )
                       }
                     >
                       <Edit3 size={16} />
                     </button>
+
+                    {/* DELETE DOCUMENT */}
 
                     <button
                       type="button"
                       className="action-icon-btn danger"
                       title="Delete Document"
                       onClick={() =>
-                        setDeleteModalDoc(doc)
+                        handleOpenDeleteDoc(
+                          doc
+                        )
                       }
                     >
                       <Trash2 size={16} />
@@ -846,7 +1356,9 @@ export const Profile = () => {
 
         </div>
 
-        {/* LOGOUT */}
+        {/* =================================================
+            LOGOUT
+        ================================================= */}
 
         <div className="profile-account-footer-actions">
 
@@ -857,42 +1369,65 @@ export const Profile = () => {
             onClick={handleLogout}
             loading={isLoggingOut}
           >
+
             {isLoggingOut
               ? 'Logging out...'
               : 'Logout Account'}
+
           </Button>
 
         </div>
 
       </div>
 
-      {/* DELETE DOCUMENT MODAL */}
+      {/* =================================================
+          DELETE DOCUMENT MODAL
+      ================================================= */}
 
       <Modal
         isOpen={!!deleteModalDoc}
-        onClose={() =>
-          setDeleteModalDoc(null)
+        onClose={
+          handleCloseDeleteModal
         }
         title="Confirm Document Deletion"
         footer={
           <>
+
+            {/* CANCEL */}
+
             <Button
               variant="secondary"
               size="md"
-              onClick={() =>
-                setDeleteModalDoc(null)
+              onClick={
+                handleCloseDeleteModal
+              }
+              disabled={
+                isDeletingDoc
               }
             >
               Cancel
             </Button>
 
+            {/* DELETE */}
+
             <Button
               variant="danger"
               size="md"
-              onClick={handleConfirmDelete}
+              onClick={
+                handleConfirmDelete
+              }
+              loading={
+                isDeletingDoc
+              }
+              disabled={
+                isDeletingDoc
+              }
             >
-              Delete Document
+              {isDeletingDoc
+                ? 'Deleting...'
+                : 'Delete Document'}
             </Button>
+
           </>
         }
       >
@@ -908,9 +1443,11 @@ export const Profile = () => {
 
             <p>
               Are you sure you want to delete{' '}
+
               <strong>
                 "{deleteModalDoc.title}"
               </strong>
+
               ?
             </p>
 
@@ -919,13 +1456,25 @@ export const Profile = () => {
               and cannot be undone.
             </p>
 
+            {/* DELETE ERROR */}
+
+            {deleteError && (
+
+              <p className="payt-input-error">
+                {deleteError}
+              </p>
+
+            )}
+
           </div>
 
         )}
 
       </Modal>
 
-      {/* EDIT PROFILE MODAL */}
+      {/* =================================================
+          EDIT PROFILE MODAL
+      ================================================= */}
 
       <Modal
         isOpen={editProfileOpen}
@@ -935,6 +1484,7 @@ export const Profile = () => {
         title="Edit Profile Information"
         footer={
           <>
+
             <Button
               variant="secondary"
               size="md"
@@ -948,19 +1498,28 @@ export const Profile = () => {
             <Button
               variant="primary"
               size="md"
-              onClick={handleSaveProfile}
-              loading={isSavingProfile}
+              onClick={
+                handleSaveProfile
+              }
+              loading={
+                isSavingProfile
+              }
             >
+
               {isSavingProfile
                 ? 'Saving...'
                 : 'Save Changes'}
+
             </Button>
+
           </>
         }
       >
 
         <form
-          onSubmit={handleSaveProfile}
+          onSubmit={
+            handleSaveProfile
+          }
           className="edit-profile-modal-form"
         >
 
@@ -968,6 +1527,8 @@ export const Profile = () => {
             Update your personal account
             information.
           </p>
+
+          {/* AVATAR */}
 
           <div className="avatar-edit-preview-wrapper">
 
@@ -983,11 +1544,14 @@ export const Profile = () => {
             <Input
               label="Avatar Image URL"
               placeholder="https://..."
-              value={profileDraft.avatar}
+              value={
+                profileDraft.avatar
+              }
               onChange={(e) =>
                 setProfileDraft(
                   (prev) => ({
                     ...prev,
+
                     avatar:
                       e.target.value,
                   })
@@ -1000,15 +1564,19 @@ export const Profile = () => {
 
           <div className="form-fields">
 
+            {/* FULL NAME */}
+
             <Input
               label="Full Name"
               value={
                 profileDraft.fullName
               }
               onChange={(e) => {
+
                 setProfileDraft(
                   (prev) => ({
                     ...prev,
+
                     fullName:
                       e.target.value,
                   })
@@ -1017,10 +1585,15 @@ export const Profile = () => {
                 if (profileError) {
                   setProfileError('');
                 }
+
               }}
-              error={profileError}
+              error={
+                profileError
+              }
               required
             />
+
+            {/* EMAIL */}
 
             <Input
               label="Email Address"
@@ -1032,6 +1605,7 @@ export const Profile = () => {
                 setProfileDraft(
                   (prev) => ({
                     ...prev,
+
                     email:
                       e.target.value,
                   })
@@ -1045,33 +1619,67 @@ export const Profile = () => {
 
       </Modal>
 
-      {/* EDIT DOCUMENT MODAL */}
+      {/* =================================================
+          EDIT DOCUMENT MODAL
+          PATCH /documents/:documentId
+      ================================================= */}
 
       <Modal
         isOpen={!!editDocModal}
-        onClose={() =>
-          setEditDocModal(null)
-        }
+        onClose={() => {
+
+          if (!isSavingDoc) {
+            setEditDocModal(null);
+            setDocError('');
+          }
+
+        }}
         title="Edit Document Information"
         footer={
           <>
+
+            {/* CANCEL */}
+
             <Button
               variant="secondary"
               size="md"
-              onClick={() =>
-                setEditDocModal(null)
+              onClick={() => {
+
+                if (!isSavingDoc) {
+                  setEditDocModal(null);
+                  setDocError('');
+                }
+
+              }}
+              disabled={
+                isSavingDoc
               }
             >
               Cancel
             </Button>
 
+            {/* SAVE */}
+
             <Button
               variant="primary"
               size="md"
-              onClick={handleSaveDoc}
+              onClick={
+                handleSaveDoc
+              }
+              loading={
+                isSavingDoc
+              }
+              disabled={
+                isSavingDoc
+              }
             >
-              Save Changes
+
+              {isSavingDoc
+                ? 'Saving...'
+                : 'Save Changes'}
+
             </Button>
+
           </>
         }
       >
@@ -1079,24 +1687,34 @@ export const Profile = () => {
         {editDocModal && (
 
           <form
-            onSubmit={handleSaveDoc}
+            onSubmit={
+              handleSaveDoc
+            }
             className="edit-profile-modal-form"
           >
 
             <p className="modal-description">
-              Update document title and
-              academic metadata.
+              Update document title,
+              description and category.
             </p>
 
             <div className="form-fields">
 
+              {/* =========================================
+                  DOCUMENT TITLE
+              ========================================= */}
+
               <Input
                 label="Document Title"
-                value={docDraft.title}
+                value={
+                  docDraft.title
+                }
                 onChange={(e) => {
+
                   setDocDraft(
                     (prev) => ({
                       ...prev,
+
                       title:
                         e.target.value,
                     })
@@ -1105,39 +1723,122 @@ export const Profile = () => {
                   if (docError) {
                     setDocError('');
                   }
+
                 }}
-                error={docError}
                 required
               />
 
-              <Input
-                label="Course / Subject"
-                value={docDraft.subject}
-                onChange={(e) =>
-                  setDocDraft(
-                    (prev) => ({
-                      ...prev,
-                      subject:
-                        e.target.value,
-                    })
-                  )
-                }
-              />
+              {/* =========================================
+                  DESCRIPTION
+              ========================================= */}
 
-              <Select
-                label="Academic Major"
-                options={MAJORS}
-                value={docDraft.major}
-                onChange={(e) =>
-                  setDocDraft(
-                    (prev) => ({
-                      ...prev,
-                      major:
-                        e.target.value,
-                    })
-                  )
-                }
-              />
+              <div className="payt-input-group">
+
+                <label className="payt-input-label">
+                  Description
+                </label>
+
+                <textarea
+                  className="payt-textarea"
+                  rows={4}
+                  value={
+                    docDraft.description
+                  }
+                  onChange={(e) =>
+                    setDocDraft(
+                      (prev) => ({
+                        ...prev,
+
+                        description:
+                          e.target.value,
+                      })
+                    )
+                  }
+                  placeholder="Document description"
+                />
+
+              </div>
+
+              {/* =========================================
+                  CATEGORY
+              ========================================= */}
+
+              <div className="payt-input-group">
+
+                <label className="payt-input-label">
+                  Document Category
+                </label>
+
+                <select
+                  className="payt-input"
+                  value={
+                    docDraft.categoryId
+                  }
+                  disabled={
+                    isLoadingCategories ||
+                    isSavingDoc
+                  }
+                  onChange={(e) => {
+
+                    setDocDraft(
+                      (prev) => ({
+                        ...prev,
+
+                        categoryId:
+                          e.target.value,
+                      })
+                    );
+
+                    if (docError) {
+                      setDocError('');
+                    }
+
+                  }}
+                >
+
+                  {/* DEFAULT OPTION */}
+
+                  <option value="">
+                    {isLoadingCategories
+                      ? 'Loading categories...'
+                      : 'Select category'}
+                  </option>
+
+                  {/* CATEGORY TỪ BACKEND */}
+
+                  {categories.map(
+                    (category) => (
+
+                      <option
+                        key={
+                          category.id
+                        }
+                        value={
+                          category.id
+                        }
+                      >
+                        {category.title ||
+                          category.name ||
+                          category.slug ||
+                          'Category'}
+                      </option>
+
+                    )
+                  )}
+
+                </select>
+
+              </div>
+
+              {/* EDIT DOCUMENT ERROR */}
+
+              {docError && (
+
+                <p className="payt-input-error">
+                  {docError}
+                </p>
+
+              )}
 
             </div>
 
