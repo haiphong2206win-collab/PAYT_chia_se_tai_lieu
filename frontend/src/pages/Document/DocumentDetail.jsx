@@ -1,5 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import {
+  useEffect,
+  useState,
+  useCallback,
+} from 'react';
+
+import {
+  useParams,
+  Link,
+} from 'react-router-dom';
 
 import {
   ArrowLeft,
@@ -10,6 +18,9 @@ import {
   Calendar,
   Share2,
   FileText,
+  MessageSquare,
+  Edit3,
+  Trash2,
 } from 'lucide-react';
 
 import Button from '../../components/common/Button';
@@ -17,48 +28,79 @@ import Toast from '../../components/common/Toast';
 import DocumentPreview from '../../components/document/DocumentPreview';
 import DocumentCard from '../../components/document/DocumentCard';
 
+// =====================================================
+// DOCUMENT API
+// =====================================================
+
 import {
   getDocumentByIdApi,
   downloadDocumentApi,
   getDocumentSaveStatusApi,
   saveDocumentApi,
   unsaveDocumentApi,
+
+  // REVIEWS
+  getDocumentReviewsApi,
+  createDocumentReviewApi,
+  updateReviewApi,
+  deleteReviewApi,
 } from '../../services/document.api';
 
-import { MOCK_DOCUMENTS } from '../../mock/documents';
-import { formatDate } from '../../utils/formatters';
+// =====================================================
+// USER API
+// =====================================================
+
+import {
+  getUserProfileApi,
+} from '../../services/user.api';
+
+import {
+  MOCK_DOCUMENTS,
+} from '../../mock/documents';
+
+import {
+  formatDate,
+} from '../../utils/formatters';
 
 import './DocumentDetail.css';
 
 // =====================================================
-// HELPER: ĐỌC TRẠNG THÁI SAVED TỪ RESPONSE BACKEND
-// =====================================================
-//
-// Vì chưa biết chính xác GET /documents/:id/save
-// trả field tên gì, helper này hỗ trợ một số dạng phổ biến.
-//
-// Sau khi test response thật từ BE,
-// mình có thể rút gọn lại cho đúng contract chính xác.
+// HELPER: EXTRACT SAVED STATUS
 // =====================================================
 
 const extractSavedStatus = (response) => {
-  if (typeof response?.isSaved === 'boolean') {
+  if (
+    typeof response?.isSaved ===
+    'boolean'
+  ) {
     return response.isSaved;
   }
 
-  if (typeof response?.saved === 'boolean') {
+  if (
+    typeof response?.saved ===
+    'boolean'
+  ) {
     return response.saved;
   }
 
-  if (typeof response?.data === 'boolean') {
+  if (
+    typeof response?.data ===
+    'boolean'
+  ) {
     return response.data;
   }
 
-  if (typeof response?.data?.isSaved === 'boolean') {
+  if (
+    typeof response?.data?.isSaved ===
+    'boolean'
+  ) {
     return response.data.isSaved;
   }
 
-  if (typeof response?.data?.saved === 'boolean') {
+  if (
+    typeof response?.data?.saved ===
+    'boolean'
+  ) {
     return response.data.saved;
   }
 
@@ -73,6 +115,73 @@ const extractSavedStatus = (response) => {
   return false;
 };
 
+// =====================================================
+// HELPER: MAP BACKEND REVIEW → UI REVIEW
+// =====================================================
+
+const mapBackendReview = (review) => ({
+  id:
+    review.id ||
+    review.review_id,
+
+  rating:
+    Number(
+      review.rating ??
+      review.star ??
+      review.stars ??
+      0
+    ),
+
+  content:
+    review.comment ??
+    review.content ??
+    review.review ??
+    review.description ??
+    '',
+
+  createdAt:
+    review.created_at ||
+    review.createdAt,
+
+  updatedAt:
+    review.updated_at ||
+    review.updatedAt,
+
+  user: {
+    id:
+      review.user_id ||
+      review.reviewer_id ||
+      review.user?.id ||
+      review.reviewer?.id ||
+      null,
+
+    name:
+      review.reviewer_name ||
+      review.user_name ||
+      review.user_full_name ||
+      review.reviewer_full_name ||
+      review.full_name ||
+      review.user?.full_name ||
+      review.user?.fullName ||
+      review.user?.name ||
+      review.reviewer?.full_name ||
+      review.reviewer?.name ||
+      'Anonymous User',
+
+    avatar:
+      review.reviewer_avatar ||
+      review.user_avatar ||
+      review.avatar ||
+      review.user?.avatar ||
+      review.reviewer?.avatar ||
+      'https://ui-avatars.com/api/?name=User',
+  },
+});
+
+// =====================================================
+// DOCUMENT DETAIL COMPONENT
+// =====================================================
+
 export const DocumentDetail = () => {
   const { id } = useParams();
 
@@ -80,259 +189,195 @@ export const DocumentDetail = () => {
   // 1. DOCUMENT STATE
   // =====================================================
 
-  const [document, setDocument] = useState(null);
+  const [
+    document,
+    setDocument,
+  ] = useState(null);
 
-  const [isLoadingDocument, setIsLoadingDocument] =
-    useState(true);
+  const [
+    isLoadingDocument,
+    setIsLoadingDocument,
+  ] = useState(true);
 
-  const [documentError, setDocumentError] =
-    useState('');
+  const [
+    documentError,
+    setDocumentError,
+  ] = useState('');
 
-  // Related Documents vẫn mock ở bước này.
-  const [relatedDocs] = useState(
-    MOCK_DOCUMENTS.slice(0, 3)
+  // =====================================================
+  // RELATED DOCUMENTS
+  //
+  // Phần này hiện vẫn mock.
+  // Sẽ tích hợp Backend ở bước sau.
+  // =====================================================
+
+  const [
+    relatedDocs,
+  ] = useState(
+    MOCK_DOCUMENTS.slice(
+      0,
+      3
+    )
   );
 
   // =====================================================
   // 2. DOWNLOAD STATE
   // =====================================================
 
-  const [downloadCount, setDownloadCount] =
-    useState(0);
+  const [
+    downloadCount,
+    setDownloadCount,
+  ] = useState(0);
 
-  const [isDownloading, setIsDownloading] =
-    useState(false);
+  const [
+    isDownloading,
+    setIsDownloading,
+  ] = useState(false);
 
   // =====================================================
   // 3. SAVE DOCUMENT STATE
   // =====================================================
 
-  const [isSaved, setIsSaved] =
-    useState(false);
+  const [
+    isSaved,
+    setIsSaved,
+  ] = useState(false);
 
-  const [isCheckingSaved, setIsCheckingSaved] =
-    useState(true);
+  const [
+    isCheckingSaved,
+    setIsCheckingSaved,
+  ] = useState(true);
 
-  const [isSavingLibrary, setIsSavingLibrary] =
-    useState(false);
-
-  // =====================================================
-  // 4. TOAST STATE
-  // =====================================================
-
-  const [toastMessage, setToastMessage] =
-    useState('');
-
-  const [toastType, setToastType] =
-    useState('success');
+  const [
+    isSavingLibrary,
+    setIsSavingLibrary,
+  ] = useState(false);
 
   // =====================================================
-  // 5. GET DOCUMENT DETAIL FROM BACKEND
+  // 4. REVIEWS STATE
   // =====================================================
 
-  useEffect(() => {
-    const fetchDocumentDetail = async () => {
-      setIsLoadingDocument(true);
-      setDocumentError('');
+  const [
+    reviews,
+    setReviews,
+  ] = useState([]);
 
-      try {
-        const response =
-          await getDocumentByIdApi(id);
+  const [
+    isLoadingReviews,
+    setIsLoadingReviews,
+  ] = useState(true);
 
-        console.log(
-          'Document Detail API response:',
-          response
-        );
+  const [
+    reviewsError,
+    setReviewsError,
+  ] = useState('');
 
-        const backendDocument =
-          response.document ||
-          response.data ||
-          response;
-
-        // ===============================================
-        // MAP BACKEND DATA -> FRONTEND DATA
-        // ===============================================
-
-        const mappedDocument = {
-          id: backendDocument.id,
-
-          title:
-            backendDocument.title ||
-            'Untitled Document',
-
-          description:
-            backendDocument.description ||
-            'No description available.',
-
-          major:
-            backendDocument.category_title ||
-            'Uncategorized',
-
-          categoryId:
-            backendDocument.category_id,
-
-          // Backend hiện chưa có subject tương ứng.
-          subject:
-            backendDocument.subject ||
-            '',
-
-          fileType:
-            backendDocument.file_type
-              ? backendDocument.file_type
-                .split('/')
-                .pop()
-                .toUpperCase()
-              : 'FILE',
-
-          rawFileType:
-            backendDocument.file_type,
-
-          fileUrl:
-            backendDocument.file_url,
-
-          fileSize:
-            backendDocument.file_size
-              ? backendDocument.file_size >=
-                1024 * 1024
-                ? `${(
-                  backendDocument.file_size /
-                  (1024 * 1024)
-                ).toFixed(2)} MB`
-                : `${(
-                  backendDocument.file_size /
-                  1024
-                ).toFixed(2)} KB`
-              : 'Unknown',
-
-          uploadDate:
-            backendDocument.created_at,
-
-          downloads:
-            backendDocument.download_count ??
-            0,
-
-          views:
-            backendDocument.view_count ??
-            0,
-
-          rating:
-            Number(
-              backendDocument.average_rating ??
-              0
-            ),
-
-          reviewCount:
-            Number(
-              backendDocument.review_count ??
-              0
-            ),
-
-          status:
-            backendDocument.status ||
-            'pending',
-
-          pages:
-            backendDocument.pages ||
-            null,
-
-          uploader: {
-            id:
-              backendDocument.uploader_id ||
-              null,
-
-            name:
-              backendDocument.uploader_name ||
-              backendDocument.full_name ||
-              'Unknown User',
-
-            avatar:
-              backendDocument.uploader_avatar ||
-              'https://ui-avatars.com/api/?name=User',
-
-            role:
-              backendDocument.uploader_role ||
-              'Student',
-          },
-        };
-
-        setDocument(mappedDocument);
-
-        setDownloadCount(
-          mappedDocument.downloads
-        );
-      } catch (error) {
-        console.error(
-          'Document Detail API error:',
-          error
-        );
-
-        setDocumentError(
-          error.response?.data?.message ||
-          'Unable to load document.'
-        );
-      } finally {
-        setIsLoadingDocument(false);
-      }
-    };
-
-    if (id) {
-      fetchDocumentDetail();
-    }
-  }, [id]);
+  const [
+    reviewTotalCount,
+    setReviewTotalCount,
+  ] = useState(0);
 
   // =====================================================
-  // 6. CHECK SAVED STATUS FROM BACKEND
+  // 5. CURRENT USER STATE
+  // =====================================================
+  //
+  // Dùng để xác định review nào là của user
+  // đang đăng nhập.
+  //
+  // Chỉ review của chính mình mới có:
+  // Edit
+  // Delete
+  //
   // =====================================================
 
-  useEffect(() => {
-    const checkSavedStatus = async () => {
-      if (!id) {
-        return;
-      }
+  const [
+    currentUserId,
+    setCurrentUserId,
+  ] = useState(null);
 
-      setIsCheckingSaved(true);
-
-      try {
-        const response =
-          await getDocumentSaveStatusApi(id);
-
-        console.log(
-          'Document Save Status API response:',
-          response
-        );
-
-        const saved =
-          extractSavedStatus(response);
-
-        setIsSaved(saved);
-      } catch (error) {
-        /*
-          Nếu Backend dùng 404 để biểu thị
-          tài liệu chưa được save,
-          thì coi như isSaved = false.
-        */
-        if (
-          error.response?.status === 404
-        ) {
-          setIsSaved(false);
-        } else {
-          console.error(
-            'Document Save Status API error:',
-            error
-          );
-
-          setIsSaved(false);
-        }
-      } finally {
-        setIsCheckingSaved(false);
-      }
-    };
-
-    checkSavedStatus();
-  }, [id]);
+  const [
+    isLoadingCurrentUser,
+    setIsLoadingCurrentUser,
+  ] = useState(true);
 
   // =====================================================
-  // 7. TOAST
+  // 6. CREATE REVIEW STATE
+  // =====================================================
+
+  const [
+    reviewRating,
+    setReviewRating,
+  ] = useState(0);
+
+  const [
+    reviewComment,
+    setReviewComment,
+  ] = useState('');
+
+  const [
+    isSubmittingReview,
+    setIsSubmittingReview,
+  ] = useState(false);
+
+  const [
+    reviewSubmitError,
+    setReviewSubmitError,
+  ] = useState('');
+
+  // =====================================================
+  // 7. EDIT REVIEW STATE
+  // =====================================================
+
+  const [
+    editingReviewId,
+    setEditingReviewId,
+  ] = useState(null);
+
+  const [
+    editRating,
+    setEditRating,
+  ] = useState(0);
+
+  const [
+    editComment,
+    setEditComment,
+  ] = useState('');
+
+  const [
+    isUpdatingReview,
+    setIsUpdatingReview,
+  ] = useState(false);
+
+  const [
+    reviewActionError,
+    setReviewActionError,
+  ] = useState('');
+
+  // =====================================================
+  // 8. DELETE REVIEW STATE
+  // =====================================================
+
+  const [
+    deletingReviewId,
+    setDeletingReviewId,
+  ] = useState(null);
+
+  // =====================================================
+  // 9. TOAST STATE
+  // =====================================================
+
+  const [
+    toastMessage,
+    setToastMessage,
+  ] = useState('');
+
+  const [
+    toastType,
+    setToastType,
+  ] = useState('success');
+
+  // =====================================================
+  // 10. SHOW TOAST
   // =====================================================
 
   const showToast = (
@@ -344,263 +389,1105 @@ export const DocumentDetail = () => {
   };
 
   // =====================================================
-  // 8. DOWNLOAD DOCUMENT - BACKEND THẬT
+  // 11. LOAD DOCUMENT DETAIL
+  // =====================================================
+  //
+  // GET /documents/:documentId
+  //
+  // showLoading = true:
+  // dùng khi lần đầu mở trang.
+  //
+  // showLoading = false:
+  // dùng sau POST/PATCH/DELETE review
+  // để refresh rating/count mà không làm
+  // cả trang nhảy về Loading.
+  //
   // =====================================================
 
-  const handleDownloadClick = async () => {
-    if (
-      isDownloading ||
-      !document
-    ) {
-      return;
-    }
+  const loadDocumentDetail =
+    useCallback(
+      async (
+        showLoading = true
+      ) => {
+        if (!id) {
+          return;
+        }
 
-    setIsDownloading(true);
-
-    try {
-      const response =
-        await downloadDocumentApi(
-          document.id
-        );
-
-      console.log(
-        'Download Document API response:',
-        response
-      );
-
-      const contentType =
-        response.headers?.[
-        'content-type'
-        ] || '';
-
-      // ===============================================
-      // CASE 1:
-      // Backend trả JSON chứa fileUrl
-      // ===============================================
-
-      if (
-        contentType.includes(
-          'application/json'
-        )
-      ) {
-        const text =
-          await response.data.text();
-
-        const json =
-          JSON.parse(text);
-
-        console.log(
-          'Download JSON response:',
-          json
-        );
-
-        const downloadUrl =
-          json.url ||
-          json.fileUrl ||
-          json.file_url ||
-          json.data?.url ||
-          json.data?.fileUrl ||
-          json.data?.file_url;
-
-        if (!downloadUrl) {
-          throw new Error(
-            'Backend did not return a download URL.'
+        if (showLoading) {
+          setIsLoadingDocument(
+            true
           );
         }
 
-        const link =
-          window.document.createElement(
-            'a'
+        setDocumentError('');
+
+        try {
+          const response =
+            await getDocumentByIdApi(
+              id
+            );
+
+          console.log(
+            'Document Detail API response:',
+            response
           );
 
-        link.href =
-          downloadUrl;
+          const backendDocument =
+            response.document ||
+            response.data ||
+            response;
 
-        link.target =
-          '_blank';
+          const mappedDocument = {
+            id:
+              backendDocument.id,
 
-        link.rel =
-          'noopener noreferrer';
+            title:
+              backendDocument.title ||
+              'Untitled Document',
 
-        window.document.body.appendChild(
-          link
-        );
+            description:
+              backendDocument.description ||
+              'No description available.',
 
-        link.click();
+            major:
+              backendDocument.category_title ||
+              'Uncategorized',
 
-        link.remove();
-      }
+            categoryId:
+              backendDocument.category_id,
 
-      // ===============================================
-      // CASE 2:
-      // Backend trả file trực tiếp
-      // ===============================================
+            // Backend hiện chưa có Subject tương ứng.
+            subject:
+              backendDocument.subject ||
+              '',
 
-      else {
-        const blobUrl =
-          URL.createObjectURL(
-            response.data
+            fileType:
+              backendDocument.file_type
+                ? backendDocument
+                  .file_type
+                  .split('/')
+                  .pop()
+                  .toUpperCase()
+                : 'FILE',
+
+            rawFileType:
+              backendDocument.file_type,
+
+            fileUrl:
+              backendDocument.file_url,
+
+            fileSize:
+              backendDocument.file_size
+                ? backendDocument.file_size >=
+                  1024 * 1024
+                  ? `${(
+                    backendDocument.file_size /
+                    (1024 * 1024)
+                  ).toFixed(2)} MB`
+                  : `${(
+                    backendDocument.file_size /
+                    1024
+                  ).toFixed(2)} KB`
+                : 'Unknown',
+
+            uploadDate:
+              backendDocument.created_at,
+
+            downloads:
+              Number(
+                backendDocument.download_count ??
+                0
+              ),
+
+            views:
+              Number(
+                backendDocument.view_count ??
+                0
+              ),
+
+            rating:
+              Number(
+                backendDocument.average_rating ??
+                0
+              ),
+
+            reviewCount:
+              Number(
+                backendDocument.review_count ??
+                0
+              ),
+
+            status:
+              backendDocument.status ||
+              'pending',
+
+            pages:
+              backendDocument.pages ||
+              null,
+
+            uploader: {
+              id:
+                backendDocument.uploader_id ||
+                null,
+
+              name:
+                backendDocument.uploader_name ||
+                backendDocument.full_name ||
+                'Unknown User',
+
+              avatar:
+                backendDocument.uploader_avatar ||
+                'https://ui-avatars.com/api/?name=User',
+
+              role:
+                backendDocument.uploader_role ||
+                'Student',
+            },
+          };
+
+          setDocument(
+            mappedDocument
           );
 
-        const link =
-          window.document.createElement(
-            'a'
+          setDownloadCount(
+            mappedDocument.downloads
+          );
+        } catch (error) {
+          console.error(
+            'Document Detail API error:',
+            error
           );
 
-        link.href =
-          blobUrl;
-
-        const extension =
-          document.fileType
-            ?.toLowerCase() ||
-          'file';
-
-        link.download =
-          `${document.title}.${extension}`;
-
-        window.document.body.appendChild(
-          link
-        );
-
-        link.click();
-
-        link.remove();
-
-        URL.revokeObjectURL(
-          blobUrl
-        );
-      }
-
-      setDownloadCount(
-        (prev) => prev + 1
-      );
-
-      showToast(
-        'Document downloaded successfully!',
-        'success'
-      );
-    } catch (error) {
-      console.error(
-        'Download Document API error:',
-        error
-      );
-
-      showToast(
-        error.response?.data?.message ||
-        error.message ||
-        'Unable to download document.',
-        'error'
-      );
-    } finally {
-      setIsDownloading(false);
-    }
-  };
+          setDocumentError(
+            error.response
+              ?.data
+              ?.message ||
+            'Unable to load document.'
+          );
+        } finally {
+          if (showLoading) {
+            setIsLoadingDocument(
+              false
+            );
+          }
+        }
+      },
+      [id]
+    );
 
   // =====================================================
-  // 9. SAVE / UNSAVE DOCUMENT - BACKEND THẬT
+  // LOAD DOCUMENT KHI MỞ TRANG
   // =====================================================
 
-  const handleSaveLibrary = async () => {
-    if (
-      isSavingLibrary ||
-      isCheckingSaved ||
-      !document
-    ) {
-      return;
-    }
+  useEffect(() => {
+    loadDocumentDetail();
+  }, [loadDocumentDetail]);
 
-    setIsSavingLibrary(true);
+  // =====================================================
+  // 12. LOAD REVIEWS
+  // =====================================================
+  //
+  // GET /documents/:documentId/reviews
+  //
+  // =====================================================
 
-    try {
-      // ===============================================
-      // CHƯA SAVE -> SAVE
-      // ===============================================
+  const loadReviews =
+    useCallback(
+      async (
+        showLoading = true
+      ) => {
+        if (!id) {
+          return;
+        }
 
-      if (!isSaved) {
+        if (showLoading) {
+          setIsLoadingReviews(
+            true
+          );
+        }
+
+        setReviewsError('');
+
+        try {
+          const response =
+            await getDocumentReviewsApi(
+              id
+            );
+
+          console.log(
+            'Document Reviews API response:',
+            response
+          );
+
+          const backendReviews =
+            response.reviews ||
+            response.data?.reviews ||
+            (
+              Array.isArray(
+                response.data
+              )
+                ? response.data
+                : []
+            );
+
+          const mappedReviews =
+            backendReviews.map(
+              mapBackendReview
+            );
+
+          console.log(
+            'Mapped Reviews for UI:',
+            mappedReviews
+          );
+
+          setReviews(
+            mappedReviews
+          );
+
+          // ===========================================
+          // Backend có pagination.
+          //
+          // Nếu có totalCount:
+          // dùng tổng thật từ Backend.
+          //
+          // Nếu không:
+          // dùng số review hiện có.
+          // ===========================================
+
+          setReviewTotalCount(
+            Number(
+              response.pagination
+                ?.totalCount ??
+              response.data
+                ?.pagination
+                ?.totalCount ??
+              mappedReviews.length
+            )
+          );
+        } catch (error) {
+          console.error(
+            'Document Reviews API error:',
+            error
+          );
+
+          setReviews([]);
+
+          setReviewTotalCount(
+            0
+          );
+
+          setReviewsError(
+            error.response
+              ?.data
+              ?.message ||
+            'Unable to load reviews.'
+          );
+        } finally {
+          if (showLoading) {
+            setIsLoadingReviews(
+              false
+            );
+          }
+        }
+      },
+      [id]
+    );
+
+  // =====================================================
+  // LOAD REVIEWS KHI MỞ TRANG
+  // =====================================================
+
+  useEffect(() => {
+    loadReviews();
+  }, [loadReviews]);
+
+  // =====================================================
+  // 13. GET CURRENT USER
+  // =====================================================
+  //
+  // GET /users/profile
+  //
+  // =====================================================
+
+  useEffect(() => {
+    const loadCurrentUser =
+      async () => {
+        setIsLoadingCurrentUser(
+          true
+        );
+
+        try {
+          const response =
+            await getUserProfileApi();
+
+          console.log(
+            'Current User API response:',
+            response
+          );
+
+          const profile =
+            response.user ||
+            response.data ||
+            response;
+
+          setCurrentUserId(
+            profile.id ||
+            profile.user_id ||
+            null
+          );
+        } catch (error) {
+          console.error(
+            'Current User API error:',
+            error
+          );
+
+          setCurrentUserId(
+            null
+          );
+        } finally {
+          setIsLoadingCurrentUser(
+            false
+          );
+        }
+      };
+
+    loadCurrentUser();
+  }, []);
+
+  // =====================================================
+  // 14. CHECK SAVED STATUS
+  // =====================================================
+  //
+  // GET /documents/:documentId/save
+  //
+  // =====================================================
+
+  useEffect(() => {
+    const checkSavedStatus =
+      async () => {
+        if (!id) {
+          return;
+        }
+
+        setIsCheckingSaved(
+          true
+        );
+
+        try {
+          const response =
+            await getDocumentSaveStatusApi(
+              id
+            );
+
+          console.log(
+            'Document Save Status API response:',
+            response
+          );
+
+          setIsSaved(
+            extractSavedStatus(
+              response
+            )
+          );
+        } catch (error) {
+          if (
+            error.response?.status ===
+            404
+          ) {
+            setIsSaved(false);
+          } else {
+            console.error(
+              'Document Save Status API error:',
+              error
+            );
+
+            setIsSaved(false);
+          }
+        } finally {
+          setIsCheckingSaved(
+            false
+          );
+        }
+      };
+
+    checkSavedStatus();
+  }, [id]);
+
+  // =====================================================
+  // 15. DOWNLOAD DOCUMENT
+  // =====================================================
+  //
+  // GET /documents/:documentId/download
+  //
+  // =====================================================
+
+  const handleDownloadClick =
+    async () => {
+      if (
+        isDownloading ||
+        !document
+      ) {
+        return;
+      }
+
+      setIsDownloading(true);
+
+      try {
         const response =
-          await saveDocumentApi(
+          await downloadDocumentApi(
             document.id
           );
 
         console.log(
-          'Save Document API response:',
+          'Download Document API response:',
           response
         );
 
-        setIsSaved(true);
+        const contentType =
+          response.headers?.[
+          'content-type'
+          ] || '';
+
+        // =============================================
+        // CASE 1:
+        // Backend trả JSON có fileUrl
+        // =============================================
+
+        if (
+          contentType.includes(
+            'application/json'
+          )
+        ) {
+          const text =
+            await response.data.text();
+
+          const json =
+            JSON.parse(text);
+
+          console.log(
+            'Download JSON response:',
+            json
+          );
+
+          const downloadUrl =
+            json.url ||
+            json.fileUrl ||
+            json.file_url ||
+            json.data?.url ||
+            json.data?.fileUrl ||
+            json.data?.file_url;
+
+          if (!downloadUrl) {
+            throw new Error(
+              'Backend did not return a download URL.'
+            );
+          }
+
+          const link =
+            window.document
+              .createElement('a');
+
+          link.href =
+            downloadUrl;
+
+          link.target =
+            '_blank';
+
+          link.rel =
+            'noopener noreferrer';
+
+          window.document.body
+            .appendChild(link);
+
+          link.click();
+
+          link.remove();
+        }
+
+        // =============================================
+        // CASE 2:
+        // Backend trả file trực tiếp
+        // =============================================
+
+        else {
+          const blobUrl =
+            URL.createObjectURL(
+              response.data
+            );
+
+          const link =
+            window.document
+              .createElement('a');
+
+          link.href =
+            blobUrl;
+
+          const extension =
+            document.fileType
+              ?.toLowerCase() ||
+            'file';
+
+          link.download =
+            `${document.title}.${extension}`;
+
+          window.document.body
+            .appendChild(link);
+
+          link.click();
+
+          link.remove();
+
+          URL.revokeObjectURL(
+            blobUrl
+          );
+        }
+
+        setDownloadCount(
+          (prev) =>
+            prev + 1
+        );
 
         showToast(
-          response.message ||
-          'Document saved to your library!',
+          'Document downloaded successfully!',
           'success'
         );
+      } catch (error) {
+        console.error(
+          'Download Document API error:',
+          error
+        );
+
+        showToast(
+          error.response
+            ?.data
+            ?.message ||
+          error.message ||
+          'Unable to download document.',
+          'error'
+        );
+      } finally {
+        setIsDownloading(
+          false
+        );
+      }
+    };
+
+  // =====================================================
+  // 16. SAVE / UNSAVE DOCUMENT
+  // =====================================================
+
+  const handleSaveLibrary =
+    async () => {
+      if (
+        isSavingLibrary ||
+        isCheckingSaved ||
+        !document
+      ) {
+        return;
+      }
+
+      setIsSavingLibrary(
+        true
+      );
+
+      try {
+        // =============================================
+        // CHƯA SAVE → SAVE
+        // =============================================
+
+        if (!isSaved) {
+          const response =
+            await saveDocumentApi(
+              document.id
+            );
+
+          console.log(
+            'Save Document API response:',
+            response
+          );
+
+          setIsSaved(true);
+
+          showToast(
+            response.message ||
+            'Document saved to your library!',
+            'success'
+          );
+        }
+
+        // =============================================
+        // ĐÃ SAVE → UNSAVE
+        // =============================================
+
+        else {
+          const response =
+            await unsaveDocumentApi(
+              document.id
+            );
+
+          console.log(
+            'Unsave Document API response:',
+            response
+          );
+
+          setIsSaved(false);
+
+          showToast(
+            response.message ||
+            'Document removed from your library.',
+            'info'
+          );
+        }
+      } catch (error) {
+        console.error(
+          'Save / Unsave Document API error:',
+          error
+        );
+
+        showToast(
+          error.response
+            ?.data
+            ?.message ||
+          'Unable to update saved document.',
+          'error'
+        );
+      } finally {
+        setIsSavingLibrary(
+          false
+        );
+      }
+    };
+
+  // =====================================================
+  // 17. CREATE REVIEW
+  // =====================================================
+  //
+  // POST /documents/:documentId/reviews
+  //
+  // Body đã test:
+  //
+  // {
+  //   rating: 5,
+  //   comment: "..."
+  // }
+  //
+  // =====================================================
+
+  const handleSubmitReview =
+    async (e) => {
+      e.preventDefault();
+
+      if (
+        isSubmittingReview
+      ) {
+        return;
+      }
+
+      if (!currentUserId) {
+        setReviewSubmitError(
+          'Please log in before submitting a review.'
+        );
+
+        return;
       }
 
       // ===============================================
-      // ĐÃ SAVE -> UNSAVE
+      // RATING 1 → 5
       // ===============================================
 
-      else {
+      if (
+        reviewRating < 1 ||
+        reviewRating > 5
+      ) {
+        setReviewSubmitError(
+          'Please select a rating from 1 to 5 stars.'
+        );
+
+        return;
+      }
+
+      setIsSubmittingReview(
+        true
+      );
+
+      setReviewSubmitError('');
+
+      try {
+        const reviewData = {
+          rating:
+            reviewRating,
+
+          comment:
+            reviewComment.trim(),
+        };
+
+        console.log(
+          'Create Review payload:',
+          reviewData
+        );
+
         const response =
-          await unsaveDocumentApi(
-            document.id
+          await createDocumentReviewApi(
+            id,
+            reviewData
           );
 
         console.log(
-          'Unsave Document API response:',
+          'Create Review API response:',
           response
         );
 
-        setIsSaved(false);
+        setReviewRating(0);
+        setReviewComment('');
 
         showToast(
           response.message ||
-          'Document removed from your library.',
-          'info'
+          'Review submitted successfully!',
+          'success'
+        );
+
+        // =============================================
+        // REFRESH:
+        //
+        // Reviews
+        // Average Rating
+        // Review Count
+        // =============================================
+
+        await Promise.all([
+          loadReviews(false),
+
+          loadDocumentDetail(
+            false
+          ),
+        ]);
+      } catch (error) {
+        console.error(
+          'Create Review API error:',
+          error
+        );
+
+        setReviewSubmitError(
+          error.response
+            ?.data
+            ?.message ||
+          'Unable to submit review.'
+        );
+      } finally {
+        setIsSubmittingReview(
+          false
         );
       }
-    } catch (error) {
-      console.error(
-        'Save / Unsave Document API error:',
-        error
+    };
+
+  // =====================================================
+  // 18. OPEN EDIT REVIEW
+  // =====================================================
+
+  const handleOpenEditReview =
+    (review) => {
+      setEditingReviewId(
+        review.id
       );
+
+      setEditRating(
+        review.rating
+      );
+
+      setEditComment(
+        review.content || ''
+      );
+
+      setReviewActionError(
+        ''
+      );
+    };
+
+  // =====================================================
+  // 19. CANCEL EDIT REVIEW
+  // =====================================================
+
+  const handleCancelEditReview =
+    () => {
+      if (
+        isUpdatingReview
+      ) {
+        return;
+      }
+
+      setEditingReviewId(
+        null
+      );
+
+      setEditRating(0);
+
+      setEditComment('');
+
+      setReviewActionError('');
+    };
+
+  // =====================================================
+  // 20. UPDATE REVIEW
+  // =====================================================
+  //
+  // PATCH /reviews/:reviewId
+  //
+  // =====================================================
+
+  const handleUpdateReview =
+    async (e) => {
+      e.preventDefault();
+
+      if (
+        !editingReviewId ||
+        isUpdatingReview
+      ) {
+        return;
+      }
+
+      if (
+        editRating < 1 ||
+        editRating > 5
+      ) {
+        setReviewActionError(
+          'Please select a rating from 1 to 5 stars.'
+        );
+
+        return;
+      }
+
+      setIsUpdatingReview(
+        true
+      );
+
+      setReviewActionError('');
+
+      try {
+        const reviewData = {
+          rating:
+            editRating,
+
+          comment:
+            editComment.trim(),
+        };
+
+        console.log(
+          'Update Review payload:',
+          reviewData
+        );
+
+        const response =
+          await updateReviewApi(
+            editingReviewId,
+            reviewData
+          );
+
+        console.log(
+          'Update Review API response:',
+          response
+        );
+
+        setEditingReviewId(
+          null
+        );
+
+        setEditRating(0);
+        setEditComment('');
+
+        showToast(
+          response.message ||
+          'Review updated successfully!',
+          'success'
+        );
+
+        await Promise.all([
+          loadReviews(false),
+
+          loadDocumentDetail(
+            false
+          ),
+        ]);
+      } catch (error) {
+        console.error(
+          'Update Review API error:',
+          error
+        );
+
+        setReviewActionError(
+          error.response
+            ?.data
+            ?.message ||
+          'Unable to update review.'
+        );
+      } finally {
+        setIsUpdatingReview(
+          false
+        );
+      }
+    };
+
+  // =====================================================
+  // 21. DELETE REVIEW
+  // =====================================================
+  //
+  // DELETE /reviews/:reviewId
+  //
+  // =====================================================
+
+  const handleDeleteReview =
+    async (reviewId) => {
+      if (
+        deletingReviewId
+      ) {
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          'Are you sure you want to delete this review?'
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      setDeletingReviewId(
+        reviewId
+      );
+
+      try {
+        const response =
+          await deleteReviewApi(
+            reviewId
+          );
+
+        console.log(
+          'Delete Review API response:',
+          response
+        );
+
+        // Nếu đang edit chính review này
+        // thì đóng edit form.
+        if (
+          editingReviewId ===
+          reviewId
+        ) {
+          setEditingReviewId(
+            null
+          );
+
+          setEditRating(0);
+          setEditComment('');
+        }
+
+        showToast(
+          response.message ||
+          'Review deleted successfully!',
+          'success'
+        );
+
+        await Promise.all([
+          loadReviews(false),
+
+          loadDocumentDetail(
+            false
+          ),
+        ]);
+      } catch (error) {
+        console.error(
+          'Delete Review API error:',
+          error
+        );
+
+        showToast(
+          error.response
+            ?.data
+            ?.message ||
+          'Unable to delete review.',
+          'error'
+        );
+      } finally {
+        setDeletingReviewId(
+          null
+        );
+      }
+    };
+
+  // =====================================================
+  // 22. SHARE DOCUMENT
+  // =====================================================
+
+  const handleShareClick =
+    () => {
+      if (
+        navigator.clipboard
+      ) {
+        navigator.clipboard
+          .writeText(
+            window.location.href
+          )
+          .catch(
+            () => { }
+          );
+      }
 
       showToast(
-        error.response?.data?.message ||
-        'Unable to update saved document.',
-        'error'
+        'Document link copied to clipboard!',
+        'info'
       );
-    } finally {
-      setIsSavingLibrary(false);
-    }
-  };
+    };
 
   // =====================================================
-  // 10. SHARE
+  // 23. CHECK REVIEW OWNERSHIP
   // =====================================================
 
-  const handleShareClick = () => {
-    if (
-      navigator.clipboard
-    ) {
-      navigator.clipboard
-        .writeText(
-          window.location.href
+  const isOwnReview =
+    (review) => {
+      if (
+        !currentUserId ||
+        !review?.user?.id
+      ) {
+        return false;
+      }
+
+      return (
+        String(
+          review.user.id
+        ) ===
+        String(
+          currentUserId
         )
-        .catch(() => { });
-    }
-
-    showToast(
-      'Document link copied to clipboard!',
-      'info'
-    );
-  };
+      );
+    };
 
   // =====================================================
-  // 11. LOADING
+  // REVIEW HIỆN TẠI CỦA USER
+  // =====================================================
+  //
+  // Nếu user đã review document:
+  //
+  // Không hiện Write a Review nữa.
+  // Thay vào đó user Edit/Delete review cũ.
+  //
   // =====================================================
 
-  if (isLoadingDocument) {
+  const myReview =
+    currentUserId
+      ? reviews.find(
+        (review) =>
+          isOwnReview(
+            review
+          )
+      )
+      : null;
+
+  // =====================================================
+  // 24. LOADING DOCUMENT
+  // =====================================================
+
+  if (
+    isLoadingDocument
+  ) {
     return (
       <div className="payt-document-detail-page">
 
@@ -617,7 +1504,7 @@ export const DocumentDetail = () => {
   }
 
   // =====================================================
-  // 12. ERROR
+  // 25. DOCUMENT ERROR
   // =====================================================
 
   if (
@@ -639,7 +1526,9 @@ export const DocumentDetail = () => {
               {documentError}
             </p>
 
-            <Link to="/documents">
+            <Link
+              to="/documents"
+            >
               Back to Documents
             </Link>
 
@@ -652,23 +1541,31 @@ export const DocumentDetail = () => {
   }
 
   // =====================================================
-  // 13. UI
+  // 26. UI
   // =====================================================
 
   return (
     <div className="payt-document-detail-page">
 
+      {/* =================================================
+          TOAST
+      ================================================= */}
+
       <Toast
-        message={toastMessage}
-        type={toastType}
+        message={
+          toastMessage
+        }
+        type={
+          toastType
+        }
         onClose={() =>
           setToastMessage('')
         }
       />
 
-      {/* ===============================================
+      {/* =================================================
           BREADCRUMB
-      =============================================== */}
+      ================================================= */}
 
       <div className="detail-breadcrumb-bar">
 
@@ -678,9 +1575,13 @@ export const DocumentDetail = () => {
             to="/documents"
             className="back-link"
           >
-            <ArrowLeft size={16} />
+
+            <ArrowLeft
+              size={16}
+            />
 
             Back to Documents
+
           </Link>
 
           <div className="breadcrumb-path">
@@ -691,7 +1592,9 @@ export const DocumentDetail = () => {
 
             {' / '}
 
-            <Link to="/documents">
+            <Link
+              to="/documents"
+            >
               Documents
             </Link>
 
@@ -707,11 +1610,15 @@ export const DocumentDetail = () => {
 
       </div>
 
+      {/* =================================================
+          CONTENT
+      ================================================= */}
+
       <div className="container detail-content-container">
 
-        {/* ===============================================
+        {/* =================================================
             DOCUMENT HEADER
-        =============================================== */}
+        ================================================= */}
 
         <div className="doc-detail-header">
 
@@ -722,19 +1629,23 @@ export const DocumentDetail = () => {
             </span>
 
             <span
-              className={`badge ${document.fileType ===
-                'PDF'
-                ? 'badge-pdf'
-                : 'badge-slides'
-                }`}
+              className={
+                `badge ${document.fileType ===
+                  'PDF'
+                  ? 'badge-pdf'
+                  : 'badge-slides'
+                }`
+              }
             >
               {document.fileType}
             </span>
 
             {document.subject && (
+
               <span className="badge badge-default">
                 {document.subject}
               </span>
+
             )}
 
           </div>
@@ -745,15 +1656,19 @@ export const DocumentDetail = () => {
 
           <div className="detail-uploader-row">
 
+            {/* UPLOADER */}
+
             <div className="uploader-avatar-box">
 
               <img
                 src={
-                  document.uploader
+                  document
+                    .uploader
                     .avatar
                 }
                 alt={
-                  document.uploader
+                  document
+                    .uploader
                     .name
                 }
                 className="uploader-avatar"
@@ -763,14 +1678,16 @@ export const DocumentDetail = () => {
 
                 <span className="uploader-name">
                   {
-                    document.uploader
+                    document
+                      .uploader
                       .name
                   }
                 </span>
 
                 <span className="uploader-role">
                   {
-                    document.uploader
+                    document
+                      .uploader
                       .role
                   }
                 </span>
@@ -781,30 +1698,51 @@ export const DocumentDetail = () => {
 
             <div className="uploader-stats-sep" />
 
+            {/* DATE */}
+
             <div className="detail-stat-item">
 
-              <Calendar size={15} />
+              <Calendar
+                size={15}
+              />
 
               <span>
+
                 Uploaded{' '}
-                {formatDate(
-                  document.uploadDate
-                )}
+
+                {
+                  formatDate(
+                    document.uploadDate
+                  )
+                }
+
               </span>
 
             </div>
 
+            {/* DOWNLOADS */}
+
             <div className="detail-stat-item">
 
-              <Download size={15} />
+              <Download
+                size={15}
+              />
 
               <span>
-                {downloadCount.toLocaleString()}
+
+                {
+                  downloadCount
+                    .toLocaleString()
+                }
+
                 {' '}
                 Downloads
+
               </span>
 
             </div>
+
+            {/* RATING */}
 
             <div className="detail-stat-item rating">
 
@@ -814,11 +1752,15 @@ export const DocumentDetail = () => {
               />
 
               <span>
-                {document.rating.toFixed(
-                  1
-                )}
+
+                {
+                  document.rating
+                    .toFixed(1)
+                }
+
                 {' '}
                 / 5.0
+
               </span>
 
             </div>
@@ -827,9 +1769,9 @@ export const DocumentDetail = () => {
 
         </div>
 
-        {/* ===============================================
-            MAIN LAYOUT
-        =============================================== */}
+        {/* =================================================
+            MAIN DOCUMENT AREA
+        ================================================= */}
 
         <div className="detail-main-layout">
 
@@ -838,12 +1780,14 @@ export const DocumentDetail = () => {
           <div className="detail-preview-col">
 
             <DocumentPreview
-              document={document}
+              document={
+                document
+              }
             />
 
           </div>
 
-          {/* ACTIONS */}
+          {/* DOCUMENT ACTIONS */}
 
           <div className="detail-action-col">
 
@@ -887,9 +1831,11 @@ export const DocumentDetail = () => {
 
                   <span className="value">
 
-                    {document.pages
-                      ? `${document.pages} Pages`
-                      : 'Not available'}
+                    {
+                      document.pages
+                        ? `${document.pages} Pages`
+                        : 'Not available'
+                    }
 
                   </span>
 
@@ -909,9 +1855,7 @@ export const DocumentDetail = () => {
 
               </div>
 
-              {/* =========================================
-                  ACTION BUTTONS
-              ========================================= */}
+              {/* ACTION BUTTONS */}
 
               <div className="action-buttons-group">
 
@@ -921,7 +1865,9 @@ export const DocumentDetail = () => {
                   variant="primary"
                   size="lg"
                   fullWidth
-                  icon={Download}
+                  icon={
+                    Download
+                  }
                   loading={
                     isDownloading
                   }
@@ -933,13 +1879,15 @@ export const DocumentDetail = () => {
                   }
                 >
 
-                  {isDownloading
-                    ? 'Preparing...'
-                    : 'Download Document'}
+                  {
+                    isDownloading
+                      ? 'Preparing...'
+                      : 'Download Document'
+                  }
 
                 </Button>
 
-                {/* SAVE / UNSAVE */}
+                {/* SAVE */}
 
                 <Button
                   variant={
@@ -966,17 +1914,21 @@ export const DocumentDetail = () => {
                   }
                 >
 
-                  {isCheckingSaved
-                    ? 'Checking...'
-                    : isSavingLibrary
-                      ? 'Saving...'
-                      : isSaved
-                        ? 'Saved in Library'
-                        : 'Save to Library'}
+                  {
+                    isCheckingSaved
+                      ? 'Checking...'
+                      : isSavingLibrary
+                        ? 'Saving...'
+                        : isSaved
+                          ? 'Saved in Library'
+                          : 'Save to Library'
+                  }
 
                 </Button>
 
               </div>
+
+              {/* SHARE */}
 
               <div className="action-card-footer">
 
@@ -988,7 +1940,9 @@ export const DocumentDetail = () => {
                   }
                 >
 
-                  <Share2 size={14} />
+                  <Share2
+                    size={14}
+                  />
 
                   Share Document
 
@@ -1002,11 +1956,13 @@ export const DocumentDetail = () => {
 
         </div>
 
-        {/* ===============================================
-            ABOUT DOCUMENT
-        =============================================== */}
+        {/* =================================================
+            DOCUMENT INFORMATION
+        ================================================= */}
 
         <div className="detail-info-sections">
+
+          {/* ABOUT */}
 
           <div className="payt-card info-card">
 
@@ -1020,9 +1976,7 @@ export const DocumentDetail = () => {
 
           </div>
 
-          {/* ===========================================
-              DOCUMENT INFORMATION
-          =========================================== */}
+          {/* INFO */}
 
           <div className="payt-card info-card">
 
@@ -1075,10 +2029,13 @@ export const DocumentDetail = () => {
                 </span>
 
                 <span className="spec-value">
+
                   {
-                    document.uploader
+                    document
+                      .uploader
                       .name
                   }
+
                 </span>
 
               </div>
@@ -1090,9 +2047,13 @@ export const DocumentDetail = () => {
                 </span>
 
                 <span className="spec-value">
-                  {formatDate(
-                    document.uploadDate
-                  )}
+
+                  {
+                    formatDate(
+                      document.uploadDate
+                    )
+                  }
+
                 </span>
 
               </div>
@@ -1104,7 +2065,12 @@ export const DocumentDetail = () => {
                 </span>
 
                 <span className="spec-value">
-                  {downloadCount.toLocaleString()}
+
+                  {
+                    downloadCount
+                      .toLocaleString()
+                  }
+
                 </span>
 
               </div>
@@ -1116,7 +2082,12 @@ export const DocumentDetail = () => {
                 </span>
 
                 <span className="spec-value">
-                  {document.views.toLocaleString()}
+
+                  {
+                    document.views
+                      .toLocaleString()
+                  }
+
                 </span>
 
               </div>
@@ -1128,7 +2099,9 @@ export const DocumentDetail = () => {
                 </span>
 
                 <span className="spec-value">
-                  {document.reviewCount}
+                  {
+                    document.reviewCount
+                  }
                 </span>
 
               </div>
@@ -1139,10 +2112,984 @@ export const DocumentDetail = () => {
 
         </div>
 
-        {/* ===============================================
+        {/* =================================================
+            REVIEWS SECTION
+        ================================================= */}
+
+        <div className="related-docs-section">
+
+          {/* REVIEW HEADER */}
+
+          <div
+            style={{
+              display:
+                'flex',
+
+              justifyContent:
+                'space-between',
+
+              alignItems:
+                'center',
+
+              gap:
+                '12px',
+
+              marginBottom:
+                '16px',
+            }}
+          >
+
+            <h2 className="section-title">
+              Reviews
+            </h2>
+
+            <span className="badge badge-default">
+
+              {
+                reviewTotalCount
+              } reviews
+
+            </span>
+
+          </div>
+
+          {/* =================================================
+              CURRENT USER CHECKING
+          ================================================= */}
+
+          {isLoadingCurrentUser ? (
+
+            <div
+              className="payt-card"
+              style={{
+                marginBottom:
+                  '20px',
+              }}
+            >
+
+              Checking your account...
+
+            </div>
+
+          ) : !currentUserId ? (
+
+            // =============================================
+            // NOT LOGGED IN
+            // =============================================
+
+            <div
+              className="payt-card"
+              style={{
+                marginBottom:
+                  '20px',
+              }}
+            >
+
+              <h3>
+                Want to write a review?
+              </h3>
+
+              <p>
+                Please log in before reviewing this document.
+              </p>
+
+              <Link
+                to="/login"
+              >
+
+                <Button
+                  variant="primary"
+                  size="sm"
+                >
+                  Login
+                </Button>
+
+              </Link>
+
+            </div>
+
+          ) : myReview ? (
+
+            // =============================================
+            // USER ALREADY HAS REVIEW
+            // =============================================
+
+            <div
+              className="payt-card"
+              style={{
+                marginBottom:
+                  '20px',
+              }}
+            >
+
+              <strong>
+                You have already reviewed this document.
+              </strong>
+
+              <p
+                style={{
+                  marginBottom:
+                    0,
+
+                  marginTop:
+                    '6px',
+
+                  opacity:
+                    0.75,
+                }}
+              >
+                You can edit or delete your review below.
+              </p>
+
+            </div>
+
+          ) : (
+
+            // =============================================
+            // CREATE REVIEW FORM
+            // =============================================
+
+            <div
+              className="payt-card"
+              style={{
+                marginBottom:
+                  '20px',
+              }}
+            >
+
+              <h3
+                style={{
+                  marginTop:
+                    0,
+
+                  marginBottom:
+                    '6px',
+                }}
+              >
+                Write a Review
+              </h3>
+
+              <p
+                style={{
+                  marginTop:
+                    0,
+
+                  marginBottom:
+                    '20px',
+
+                  opacity:
+                    0.75,
+                }}
+              >
+                Share your experience with this study material.
+              </p>
+
+              <form
+                onSubmit={
+                  handleSubmitReview
+                }
+              >
+
+                {/* STAR RATING */}
+
+                <div
+                  style={{
+                    marginBottom:
+                      '18px',
+                  }}
+                >
+
+                  <label
+                    style={{
+                      display:
+                        'block',
+
+                      marginBottom:
+                        '8px',
+
+                      fontWeight:
+                        600,
+                    }}
+                  >
+                    Your Rating
+                  </label>
+
+                  <div
+                    style={{
+                      display:
+                        'flex',
+
+                      gap:
+                        '7px',
+
+                      alignItems:
+                        'center',
+                    }}
+                  >
+
+                    {
+                      [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                      ].map(
+                        (
+                          star
+                        ) => (
+
+                          <button
+                            key={
+                              star
+                            }
+                            type="button"
+                            aria-label={
+                              `${star} star rating`
+                            }
+                            disabled={
+                              isSubmittingReview
+                            }
+                            onClick={() => {
+                              setReviewRating(
+                                star
+                              );
+
+                              setReviewSubmitError(
+                                ''
+                              );
+                            }}
+                            style={{
+                              border:
+                                'none',
+
+                              background:
+                                'transparent',
+
+                              padding:
+                                '2px',
+
+                              cursor:
+                                isSubmittingReview
+                                  ? 'not-allowed'
+                                  : 'pointer',
+                            }}
+                          >
+
+                            <Star
+                              size={
+                                28
+                              }
+                              className={
+                                star <=
+                                  reviewRating
+                                  ? 'star-icon'
+                                  : ''
+                              }
+                              fill={
+                                star <=
+                                  reviewRating
+                                  ? 'currentColor'
+                                  : 'none'
+                              }
+                            />
+
+                          </button>
+
+                        )
+                      )
+                    }
+
+                    {reviewRating > 0 && (
+
+                      <span
+                        style={{
+                          marginLeft:
+                            '6px',
+
+                          fontWeight:
+                            600,
+                        }}
+                      >
+
+                        {
+                          reviewRating
+                        } / 5
+
+                      </span>
+
+                    )}
+
+                  </div>
+
+                </div>
+
+                {/* COMMENT */}
+
+                <div
+                  style={{
+                    marginBottom:
+                      '18px',
+                  }}
+                >
+
+                  <label
+                    htmlFor="review-comment"
+                    style={{
+                      display:
+                        'block',
+
+                      marginBottom:
+                        '8px',
+
+                      fontWeight:
+                        600,
+                    }}
+                  >
+                    Comment
+                  </label>
+
+                  <textarea
+                    id="review-comment"
+                    className="payt-textarea"
+                    rows={4}
+                    placeholder="Share your thoughts about this document..."
+                    value={
+                      reviewComment
+                    }
+                    disabled={
+                      isSubmittingReview
+                    }
+                    onChange={(e) => {
+                      setReviewComment(
+                        e.target.value
+                      );
+
+                      setReviewSubmitError(
+                        ''
+                      );
+                    }}
+                    style={{
+                      width:
+                        '100%',
+                    }}
+                  />
+
+                </div>
+
+                {/* CREATE ERROR */}
+
+                {reviewSubmitError && (
+
+                  <p className="payt-input-error">
+
+                    {
+                      reviewSubmitError
+                    }
+
+                  </p>
+
+                )}
+
+                {/* SUBMIT */}
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  loading={
+                    isSubmittingReview
+                  }
+                  disabled={
+                    isSubmittingReview
+                  }
+                >
+
+                  {
+                    isSubmittingReview
+                      ? 'Submitting...'
+                      : 'Submit Review'
+                  }
+
+                </Button>
+
+              </form>
+
+            </div>
+
+          )}
+
+          {/* =================================================
+              REVIEW LIST
+          ================================================= */}
+
+          {isLoadingReviews ? (
+
+            <div className="payt-card">
+
+              <p>
+                Loading reviews...
+              </p>
+
+            </div>
+
+          ) : reviewsError ? (
+
+            // =============================================
+            // ERROR
+            // =============================================
+
+            <div className="payt-card">
+
+              <h3>
+                Unable to load reviews
+              </h3>
+
+              <p>
+                {reviewsError}
+              </p>
+
+            </div>
+
+          ) : reviews.length === 0 ? (
+
+            // =============================================
+            // EMPTY
+            // =============================================
+
+            <div className="payt-card payt-grid-empty">
+
+              <MessageSquare
+                size={36}
+                className="text-orange"
+              />
+
+              <h3>
+                No reviews yet
+              </h3>
+
+              <p>
+                Be the first student to review this document.
+              </p>
+
+            </div>
+
+          ) : (
+
+            // =============================================
+            // REVIEWS
+            // =============================================
+
+            <div
+              style={{
+                display:
+                  'grid',
+
+                gap:
+                  '16px',
+              }}
+            >
+
+              {
+                reviews.map(
+                  (
+                    review
+                  ) => (
+
+                    <div
+                      key={
+                        review.id
+                      }
+                      className="payt-card"
+                    >
+
+                      {/* =====================================
+                          REVIEW HEADER
+                      ===================================== */}
+
+                      <div
+                        style={{
+                          display:
+                            'flex',
+
+                          justifyContent:
+                            'space-between',
+
+                          alignItems:
+                            'flex-start',
+
+                          gap:
+                            '16px',
+                        }}
+                      >
+
+                        {/* USER */}
+
+                        <div
+                          style={{
+                            display:
+                              'flex',
+
+                            alignItems:
+                              'center',
+
+                            gap:
+                              '12px',
+                          }}
+                        >
+
+                          <img
+                            src={
+                              review
+                                .user
+                                .avatar
+                            }
+                            alt={
+                              review
+                                .user
+                                .name
+                            }
+                            style={{
+                              width:
+                                '40px',
+
+                              height:
+                                '40px',
+
+                              borderRadius:
+                                '50%',
+
+                              objectFit:
+                                'cover',
+                            }}
+                          />
+
+                          <div>
+
+                            <strong>
+
+                              {
+                                review
+                                  .user
+                                  .name
+                              }
+
+                            </strong>
+
+                            {review.createdAt && (
+
+                              <div
+                                style={{
+                                  fontSize:
+                                    '13px',
+
+                                  opacity:
+                                    0.7,
+
+                                  marginTop:
+                                    '3px',
+                                }}
+                              >
+
+                                {
+                                  formatDate(
+                                    review.createdAt
+                                  )
+                                }
+
+                              </div>
+
+                            )}
+
+                          </div>
+
+                        </div>
+
+                        {/* RATING */}
+
+                        <div
+                          style={{
+                            display:
+                              'flex',
+
+                            alignItems:
+                              'center',
+
+                            gap:
+                              '5px',
+                          }}
+                        >
+
+                          <Star
+                            size={
+                              16
+                            }
+                            className="star-icon"
+                            fill="currentColor"
+                          />
+
+                          <strong>
+
+                            {
+                              review.rating
+                                .toFixed(1)
+                            }
+
+                          </strong>
+
+                          <span>
+                            / 5.0
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                      {/* =====================================
+                          EDIT MODE
+                      ===================================== */}
+
+                      {
+                        editingReviewId ===
+                          review.id ? (
+
+                          <form
+                            onSubmit={
+                              handleUpdateReview
+                            }
+                            style={{
+                              marginTop:
+                                '18px',
+                            }}
+                          >
+
+                            {/* EDIT RATING */}
+
+                            <div
+                              style={{
+                                marginBottom:
+                                  '14px',
+                              }}
+                            >
+
+                              <label
+                                style={{
+                                  display:
+                                    'block',
+
+                                  marginBottom:
+                                    '8px',
+
+                                  fontWeight:
+                                    600,
+                                }}
+                              >
+                                Rating
+                              </label>
+
+                              <div
+                                style={{
+                                  display:
+                                    'flex',
+
+                                  gap:
+                                    '7px',
+                                }}
+                              >
+
+                                {
+                                  [
+                                    1,
+                                    2,
+                                    3,
+                                    4,
+                                    5,
+                                  ].map(
+                                    (
+                                      star
+                                    ) => (
+
+                                      <button
+                                        key={
+                                          star
+                                        }
+                                        type="button"
+                                        disabled={
+                                          isUpdatingReview
+                                        }
+                                        onClick={() => {
+                                          setEditRating(
+                                            star
+                                          );
+
+                                          setReviewActionError(
+                                            ''
+                                          );
+                                        }}
+                                        style={{
+                                          border:
+                                            'none',
+
+                                          background:
+                                            'transparent',
+
+                                          padding:
+                                            '2px',
+
+                                          cursor:
+                                            isUpdatingReview
+                                              ? 'not-allowed'
+                                              : 'pointer',
+                                        }}
+                                      >
+
+                                        <Star
+                                          size={
+                                            26
+                                          }
+                                          className={
+                                            star <=
+                                              editRating
+                                              ? 'star-icon'
+                                              : ''
+                                          }
+                                          fill={
+                                            star <=
+                                              editRating
+                                              ? 'currentColor'
+                                              : 'none'
+                                          }
+                                        />
+
+                                      </button>
+
+                                    )
+                                  )
+                                }
+
+                              </div>
+
+                            </div>
+
+                            {/* EDIT COMMENT */}
+
+                            <textarea
+                              className="payt-textarea"
+                              rows={4}
+                              value={
+                                editComment
+                              }
+                              disabled={
+                                isUpdatingReview
+                              }
+                              onChange={(e) => {
+                                setEditComment(
+                                  e.target.value
+                                );
+
+                                setReviewActionError(
+                                  ''
+                                );
+                              }}
+                              style={{
+                                width:
+                                  '100%',
+                              }}
+                            />
+
+                            {/* UPDATE ERROR */}
+
+                            {reviewActionError && (
+
+                              <p className="payt-input-error">
+
+                                {
+                                  reviewActionError
+                                }
+
+                              </p>
+
+                            )}
+
+                            {/* EDIT BUTTONS */}
+
+                            <div
+                              style={{
+                                display:
+                                  'flex',
+
+                                gap:
+                                  '10px',
+
+                                marginTop:
+                                  '12px',
+                              }}
+                            >
+
+                              <Button
+                                type="submit"
+                                variant="primary"
+                                size="sm"
+                                loading={
+                                  isUpdatingReview
+                                }
+                                disabled={
+                                  isUpdatingReview
+                                }
+                              >
+                                Save Changes
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                disabled={
+                                  isUpdatingReview
+                                }
+                                onClick={
+                                  handleCancelEditReview
+                                }
+                              >
+                                Cancel
+                              </Button>
+
+                            </div>
+
+                          </form>
+
+                        ) : (
+
+                          // ===================================
+                          // NORMAL REVIEW VIEW
+                          // ===================================
+
+                          <>
+
+                            <p
+                              style={{
+                                marginTop:
+                                  '16px',
+
+                                marginBottom:
+                                  isOwnReview(
+                                    review
+                                  )
+                                    ? '14px'
+                                    : 0,
+                              }}
+                            >
+
+                              {
+                                review.content ||
+                                'No comment provided.'
+                              }
+
+                            </p>
+
+                            {/* =================================
+                                OWNER ACTIONS
+                            ================================= */}
+
+                            {
+                              isOwnReview(
+                                review
+                              ) && (
+
+                                <div
+                                  style={{
+                                    display:
+                                      'flex',
+
+                                    gap:
+                                      '10px',
+
+                                    flexWrap:
+                                      'wrap',
+                                  }}
+                                >
+
+                                  {/* EDIT */}
+
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    icon={
+                                      Edit3
+                                    }
+                                    disabled={
+                                      deletingReviewId ===
+                                      review.id
+                                    }
+                                    onClick={() =>
+                                      handleOpenEditReview(
+                                        review
+                                      )
+                                    }
+                                  >
+                                    Edit
+                                  </Button>
+
+                                  {/* DELETE */}
+
+                                  <Button
+                                    type="button"
+                                    variant="danger"
+                                    size="sm"
+                                    icon={
+                                      Trash2
+                                    }
+                                    loading={
+                                      deletingReviewId ===
+                                      review.id
+                                    }
+                                    disabled={
+                                      deletingReviewId ===
+                                      review.id
+                                    }
+                                    onClick={() =>
+                                      handleDeleteReview(
+                                        review.id
+                                      )
+                                    }
+                                  >
+
+                                    {
+                                      deletingReviewId ===
+                                        review.id
+                                        ? 'Deleting...'
+                                        : 'Delete'
+                                    }
+
+                                  </Button>
+
+                                </div>
+
+                              )
+                            }
+
+                          </>
+
+                        )
+                      }
+
+                    </div>
+
+                  )
+                )
+              }
+
+            </div>
+
+          )}
+
+        </div>
+
+        {/* =================================================
             RELATED DOCUMENTS
-            VẪN MOCK - SẼ LÀM SAU
-        =============================================== */}
+            HIỆN VẪN MOCK
+        ================================================= */}
 
         <div className="related-docs-section">
 
@@ -1164,8 +3111,7 @@ export const DocumentDetail = () => {
               </h3>
 
               <p>
-                Check back later as more
-                study materials are added.
+                Check back later as more study materials are added.
               </p>
 
             </div>
@@ -1174,16 +3120,24 @@ export const DocumentDetail = () => {
 
             <div className="responsive-grid-3">
 
-              {relatedDocs.map(
-                (doc) => (
+              {
+                relatedDocs.map(
+                  (
+                    doc
+                  ) => (
 
-                  <DocumentCard
-                    key={doc.id}
-                    document={doc}
-                  />
+                    <DocumentCard
+                      key={
+                        doc.id
+                      }
+                      document={
+                        doc
+                      }
+                    />
 
+                  )
                 )
-              )}
+              }
 
             </div>
 

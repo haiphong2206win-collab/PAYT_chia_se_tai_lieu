@@ -17,3 +17,13 @@ export const getMyDocumentsApi = async () => {
 
   return response.data;
 };
+
+
+// GET /users/saved-document
+export const getSavedDocumentsApi = async () => {
+  const response = await api.get(
+    '/users/saved-document'
+  );
+
+  return response.data;
+};

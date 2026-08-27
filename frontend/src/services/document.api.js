@@ -106,3 +106,69 @@ export const deleteDocumentApi = async (documentId) => {
 
   return response.data;
 };
+
+
+// GET DOCUMENT REVIEWS
+// GET /documents/:documentId/reviews
+// =====================================================
+
+export const getDocumentReviewsApi = async (
+  documentId
+) => {
+  const response = await api.get(
+    `/documents/${documentId}/reviews`
+  );
+
+  return response.data;
+};
+
+
+// =====================================================
+// CREATE DOCUMENT REVIEW
+// POST /documents/:documentId/reviews
+// =====================================================
+
+export const createDocumentReviewApi = async (
+  documentId,
+  reviewData
+) => {
+  const response = await api.post(
+    `/documents/${documentId}/reviews`,
+    reviewData
+  );
+
+  return response.data;
+};
+
+
+// =====================================================
+// UPDATE REVIEW
+// PATCH /reviews/:reviewId
+// =====================================================
+
+export const updateReviewApi = async (
+  reviewId,
+  reviewData
+) => {
+  const response = await api.patch(
+    `/reviews/${reviewId}`,
+    reviewData
+  );
+
+  return response.data;
+};
+
+// =====================================================
+// DELETE REVIEW
+// DELETE /reviews/:reviewId
+// =====================================================
+
+export const deleteReviewApi = async (
+  reviewId
+) => {
+  const response = await api.delete(
+    `/reviews/${reviewId}`
+  );
+
+  return response.data;
+};
