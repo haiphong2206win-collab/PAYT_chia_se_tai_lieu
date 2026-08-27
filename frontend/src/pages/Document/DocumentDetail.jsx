@@ -600,11 +600,6 @@ export const DocumentDetail = () => {
               id
             );
 
-          console.log(
-            'Document Detail API response:',
-            response
-          );
-
           const backendDocument =
             response.document ||
             response.data ||
@@ -834,11 +829,6 @@ export const DocumentDetail = () => {
               'DESC',
           };
 
-          console.log(
-            'Related Documents query:',
-            query
-          );
-
           // =============================================
           // GET /documents?categoryId=...
           // =============================================
@@ -847,11 +837,6 @@ export const DocumentDetail = () => {
             await getDocumentsApi(
               query
             );
-
-          console.log(
-            'Related Documents API response:',
-            response
-          );
 
           const backendDocuments =
             response.documents ||
@@ -888,11 +873,6 @@ export const DocumentDetail = () => {
                 0,
                 3
               );
-
-          console.log(
-            'Mapped Related Documents for UI:',
-            mappedRelatedDocs
-          );
 
           setRelatedDocs(
             mappedRelatedDocs
@@ -962,11 +942,6 @@ export const DocumentDetail = () => {
               id
             );
 
-          console.log(
-            'Document Reviews API response:',
-            response
-          );
-
           const backendReviews =
             response.reviews ||
             response.data?.reviews ||
@@ -982,11 +957,6 @@ export const DocumentDetail = () => {
             backendReviews.map(
               mapBackendReview
             );
-
-          console.log(
-            'Mapped Reviews for UI:',
-            mappedReviews
-          );
 
           setReviews(
             mappedReviews
@@ -1068,11 +1038,6 @@ export const DocumentDetail = () => {
           const response =
             await getUserProfileApi();
 
-          console.log(
-            'Current User API response:',
-            response
-          );
-
           const profile =
             response.user ||
             response.data ||
@@ -1126,11 +1091,6 @@ export const DocumentDetail = () => {
             await getDocumentSaveStatusApi(
               id
             );
-
-          console.log(
-            'Document Save Status API response:',
-            response
-          );
 
           setIsSaved(
             extractSavedStatus(
@@ -1186,11 +1146,6 @@ export const DocumentDetail = () => {
             document.id
           );
 
-        console.log(
-          'Download Document API response:',
-          response
-        );
-
         const contentType =
           response.headers?.[
           'content-type'
@@ -1211,11 +1166,6 @@ export const DocumentDetail = () => {
 
           const json =
             JSON.parse(text);
-
-          console.log(
-            'Download JSON response:',
-            json
-          );
 
           const downloadUrl =
             json.url ||
@@ -1349,11 +1299,6 @@ export const DocumentDetail = () => {
               document.id
             );
 
-          console.log(
-            'Save Document API response:',
-            response
-          );
-
           setIsSaved(true);
 
           showToast(
@@ -1372,11 +1317,6 @@ export const DocumentDetail = () => {
             await unsaveDocumentApi(
               document.id
             );
-
-          console.log(
-            'Unsave Document API response:',
-            response
-          );
 
           setIsSaved(false);
 
@@ -1469,21 +1409,11 @@ export const DocumentDetail = () => {
             reviewComment.trim(),
         };
 
-        console.log(
-          'Create Review payload:',
-          reviewData
-        );
-
         const response =
           await createDocumentReviewApi(
             id,
             reviewData
           );
-
-        console.log(
-          'Create Review API response:',
-          response
-        );
 
         setReviewRating(0);
         setReviewComment('');
@@ -1619,21 +1549,11 @@ export const DocumentDetail = () => {
             editComment.trim(),
         };
 
-        console.log(
-          'Update Review payload:',
-          reviewData
-        );
-
         const response =
           await updateReviewApi(
             editingReviewId,
             reviewData
           );
-
-        console.log(
-          'Update Review API response:',
-          response
-        );
 
         setEditingReviewId(
           null
@@ -1708,11 +1628,6 @@ export const DocumentDetail = () => {
           await deleteReviewApi(
             reviewId
           );
-
-        console.log(
-          'Delete Review API response:',
-          response
-        );
 
         // Nếu đang edit chính review này
         // thì đóng edit form.

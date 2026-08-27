@@ -69,10 +69,6 @@ export const getUserProfileApi = async (
     profileCache &&
     now - profileCacheTime < PROFILE_CACHE_TTL
   ) {
-    console.log(
-      'User Profile: using short cache'
-    );
-
     return profileCache;
   }
 
@@ -82,10 +78,6 @@ export const getUserProfileApi = async (
   // ===================================================
 
   if (profileRequestPromise) {
-    console.log(
-      'User Profile: reusing current request'
-    );
-
     return profileRequestPromise;
   }
 

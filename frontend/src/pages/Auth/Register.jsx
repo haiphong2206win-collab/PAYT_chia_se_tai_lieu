@@ -221,11 +221,6 @@ export const Register = () => {
       const response =
         await registerApi(userData);
 
-      console.log(
-        'Register API response:',
-        response
-      );
-
       // Hiện message BE trả về
       setSuccessMessage(
         response.message ||

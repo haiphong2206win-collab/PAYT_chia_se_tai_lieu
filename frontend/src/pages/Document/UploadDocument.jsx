@@ -80,11 +80,6 @@ export const UploadDocument = () => {
         const response =
           await getCategories();
 
-        console.log(
-          'Category API response:',
-          response
-        );
-
         const categoryData =
           response.data ||
           response.categories ||
@@ -270,11 +265,6 @@ export const UploadDocument = () => {
         await uploadDocumentApi(
           formData
         );
-
-      console.log(
-        'Upload Document API response:',
-        response
-      );
 
       setUploadProgress(100);
 

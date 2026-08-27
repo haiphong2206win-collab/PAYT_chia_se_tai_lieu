@@ -278,10 +278,6 @@ const loadHomeDataApi =
       homeDataCacheTime <
       HOME_CACHE_TTL
     ) {
-      console.log(
-        'Home: using short cache'
-      );
-
       return homeDataCache;
     }
 
@@ -290,10 +286,6 @@ const loadHomeDataApi =
     // =================================================
 
     if (homeDataRequest) {
-      console.log(
-        'Home: reusing current request'
-      );
-
       return homeDataRequest;
     }
 
@@ -456,21 +448,6 @@ export const Home = () => {
             recentResponse,
           } =
             await loadHomeDataApi();
-
-          console.log(
-            'Home Category API response:',
-            categoryResponse
-          );
-
-          console.log(
-            'Home Popular Documents API response:',
-            popularResponse
-          );
-
-          console.log(
-            'Home Recent Documents API response:',
-            recentResponse
-          );
 
           if (!isMounted) {
             return;

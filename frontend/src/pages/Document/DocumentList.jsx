@@ -490,11 +490,6 @@ export const DocumentList =
             const response =
               await getCategories();
 
-            console.log(
-              'Document List Category API response:',
-              response
-            );
-
             const data =
               response.data ||
               response.categories ||
@@ -701,20 +696,10 @@ export const DocumentList =
                 selectedCategoryId;
             }
 
-            console.log(
-              'GET Documents query:',
-              query
-            );
-
             const response =
               await getDocumentsApi(
                 query
               );
-
-            console.log(
-              'Documents from Backend:',
-              response
-            );
 
             const backendDocuments =
               response.documents ||
@@ -732,11 +717,6 @@ export const DocumentList =
               backendDocuments.map(
                 mapBackendDocument
               );
-
-            console.log(
-              'Mapped Documents for UI:',
-              mappedDocuments
-            );
 
             setDocuments(
               mappedDocuments
