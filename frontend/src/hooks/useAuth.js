@@ -1,14 +1,13 @@
-// Phase 1 Mock Auth Hook - Provides simple UI state for demonstration
+// Phase 1 Auth Hook - Provides UI state placeholder
 import { useState } from 'react';
-import { MOCK_USER } from '../mock/user';
 
 export const useAuth = () => {
-  const [user, setUser] = useState(MOCK_USER);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const login = () => {
+  const login = (userData = null) => {
     setIsAuthenticated(true);
-    setUser(MOCK_USER);
+    setUser(userData);
   };
 
   const logout = () => {

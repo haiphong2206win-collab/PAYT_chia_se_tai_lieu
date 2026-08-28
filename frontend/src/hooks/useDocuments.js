@@ -1,9 +1,8 @@
-// Phase 1 Mock Documents Hook - Retrieves mock documents
+// Phase 1 Documents Hook - Retrieves documents placeholder
 import { useState } from 'react';
-import { MOCK_DOCUMENTS } from '../mock/documents';
 
 export const useDocuments = () => {
-  const [documents] = useState(MOCK_DOCUMENTS);
+  const [documents] = useState([]);
   const [loading] = useState(false);
   const [error] = useState(null);
 
