@@ -19,9 +19,7 @@ import './UploadDocument.css';
 export const UploadDocument = () => {
   const navigate = useNavigate();
 
-  // =====================================================
   // 1. FILE STATE
-  // =====================================================
 
   const [selectedFile, setSelectedFile] =
     useState(null);
@@ -29,9 +27,7 @@ export const UploadDocument = () => {
   const [fileError, setFileError] =
     useState('');
 
-  // =====================================================
   // 2. DOCUMENT FORM STATE
-  // =====================================================
 
   const [title, setTitle] =
     useState('');
@@ -42,9 +38,7 @@ export const UploadDocument = () => {
   const [categoryId, setCategoryId] =
     useState('');
 
-  // =====================================================
   // 3. CATEGORY STATE
-  // =====================================================
 
   const [categories, setCategories] =
     useState([]);
@@ -52,9 +46,7 @@ export const UploadDocument = () => {
   const [isLoadingCategories, setIsLoadingCategories] =
     useState(false);
 
-  // =====================================================
   // 4. FORM STATE
-  // =====================================================
 
   const [errors, setErrors] =
     useState({});
@@ -68,9 +60,7 @@ export const UploadDocument = () => {
   const [successMessage, setSuccessMessage] =
     useState('');
 
-  // =====================================================
   // 5. LOAD CATEGORIES FROM BACKEND
-  // =====================================================
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -101,9 +91,7 @@ export const UploadDocument = () => {
     fetchCategories();
   }, []);
 
-  // =====================================================
   // 6. SELECT FILE
-  // =====================================================
 
   const handleFileSelect = (
     fileData,
@@ -150,9 +138,7 @@ export const UploadDocument = () => {
     }
   };
 
-  // =====================================================
   // 7. REMOVE FILE
-  // =====================================================
 
   const handleFileRemove = () => {
     setSelectedFile(null);
@@ -167,9 +153,7 @@ export const UploadDocument = () => {
     setSuccessMessage('');
   };
 
-  // =====================================================
   // 8. SUBMIT DOCUMENT TO BACKEND
-  // =====================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -217,9 +201,7 @@ export const UploadDocument = () => {
     setUploadProgress(20);
 
     try {
-      // =================================================
       // FormData dùng khi request có FILE
-      // =================================================
 
       const formData =
         new FormData();
@@ -257,9 +239,7 @@ export const UploadDocument = () => {
 
       setUploadProgress(50);
 
-      // ===============================================
       // POST /documents
-      // ===============================================
 
       const response =
         await uploadDocumentApi(
@@ -308,9 +288,7 @@ export const UploadDocument = () => {
     }
   };
 
-  // =====================================================
   // 9. UI
-  // =====================================================
 
   return (
     <div className="payt-upload-page">

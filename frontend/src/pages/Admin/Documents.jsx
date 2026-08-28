@@ -33,9 +33,7 @@ import {
 
 import '../../components/admin/Admin.css';
 
-// =====================================================
 // FORMAT FILE SIZE
-// =====================================================
 
 const formatFileSize = (bytes) => {
   const size = Number(bytes || 0);
@@ -57,15 +55,12 @@ const formatFileSize = (bytes) => {
   ).toFixed(2)} KB`;
 };
 
-// =====================================================
 // MAP BACKEND DOCUMENT → ADMIN UI
-// =====================================================
 //
 // Không tạo mock data.
 // Chỉ chuyển dữ liệu Backend sang structure
 // mà giao diện Admin hiện tại đang sử dụng.
 //
-// =====================================================
 
 const mapAdminDocument = (doc) => {
   const uploader =
@@ -188,14 +183,10 @@ const mapAdminDocument = (doc) => {
   };
 };
 
-// =====================================================
 // ADMIN DOCUMENTS
-// =====================================================
 
 export const Documents = () => {
-  // ===================================================
   // DOCUMENT DATA
-  // ===================================================
 
   const [
     documents,
@@ -212,9 +203,7 @@ export const Documents = () => {
     setDocumentsError,
   ] = useState('');
 
-  // ===================================================
   // FILTER
-  // ===================================================
 
   const [
     search,
@@ -226,9 +215,7 @@ export const Documents = () => {
     setStatusFilter,
   ] = useState('all');
 
-  // ===================================================
   // PAGINATION
-  // ===================================================
 
   const [
     currentPage,
@@ -237,9 +224,7 @@ export const Documents = () => {
 
   const itemsPerPage = 5;
 
-  // ===================================================
   // MODALS
-  // ===================================================
 
   const [
     previewDoc,
@@ -251,9 +236,7 @@ export const Documents = () => {
     setDeleteTarget,
   ] = useState(null);
 
-  // ===================================================
   // ACTION STATE
-  // ===================================================
 
   const [
     updatingStatusId,
@@ -275,9 +258,7 @@ export const Documents = () => {
     setSuccessMessage,
   ] = useState('');
 
-  // ===================================================
   // GET /admin/documents
-  // ===================================================
 
   const loadAdminDocuments =
     useCallback(async () => {
@@ -355,9 +336,7 @@ export const Documents = () => {
     loadAdminDocuments();
   }, [loadAdminDocuments]);
 
-  // ===================================================
   // SEARCH + STATUS FILTER
-  // ===================================================
 
   const filteredDocs =
     useMemo(() => {
@@ -415,9 +394,7 @@ export const Documents = () => {
       statusFilter,
     ]);
 
-  // ===================================================
   // PAGINATED DATA
-  // ===================================================
 
   const paginatedDocs =
     useMemo(() => {
@@ -458,9 +435,7 @@ export const Documents = () => {
     totalPages,
   ]);
 
-  // ===================================================
   // SUCCESS MESSAGE
-  // ===================================================
 
   const showSuccessMessage =
     (message) => {
@@ -473,9 +448,7 @@ export const Documents = () => {
       }, 3000);
     };
 
-  // ===================================================
   // PATCH STATUS
-  // ===================================================
   //
   // PATCH /admin/documents/:documentId/status
   //
@@ -489,7 +462,6 @@ export const Documents = () => {
   //   status: "rejected"
   // }
   //
-  // ===================================================
 
   const handleStatusChange =
     async (
@@ -580,9 +552,7 @@ export const Documents = () => {
       }
     };
 
-  // ===================================================
   // APPROVE
-  // ===================================================
 
   const handleApprove =
     (documentId) => {
@@ -592,9 +562,7 @@ export const Documents = () => {
       );
     };
 
-  // ===================================================
   // REJECT
-  // ===================================================
 
   const handleReject =
     (documentId) => {
@@ -604,13 +572,10 @@ export const Documents = () => {
       );
     };
 
-  // ===================================================
   // DELETE
-  // ===================================================
   //
   // DELETE /admin/documents/:documentId
   //
-  // ===================================================
 
   const handleDeleteConfirm =
     async () => {
@@ -666,9 +631,7 @@ export const Documents = () => {
       }
     };
 
-  // ===================================================
   // TABLE COLUMNS
-  // ===================================================
 
   const columns = [
     {
@@ -694,9 +657,7 @@ export const Documents = () => {
     },
   ];
 
-  // ===================================================
   // UI
-  // ===================================================
 
   return (
     <div className="admin-page-content">

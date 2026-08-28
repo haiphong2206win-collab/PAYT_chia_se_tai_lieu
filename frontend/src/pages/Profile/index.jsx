@@ -24,9 +24,7 @@ import EditProfileModal from '../../components/profile/EditProfileModal';
 import EditDocumentModal from '../../components/profile/EditDocumentModal';
 import DeleteDocumentModal from '../../components/profile/DeleteDocumentModal';
 
-// =====================================================
 // USER API
-// =====================================================
 
 import {
   getUserProfileApi,
@@ -36,26 +34,20 @@ import {
   clearUserProfileCache,
 } from '../../services/user.api';
 
-// =====================================================
 // DOCUMENT API
-// =====================================================
 
 import {
   updateDocumentApi,
   deleteDocumentApi,
 } from '../../services/document.api';
 
-// =====================================================
 // CATEGORY API
-// =====================================================
 
 import {
   getCategories,
 } from '../../services/category.api';
 
-// =====================================================
 // AUTH API
-// =====================================================
 
 import {
   logoutApi,
@@ -67,9 +59,7 @@ import {
 
 import './Profile.css';
 
-// =====================================================
 // FORMAT FILE SIZE
-// =====================================================
 
 const formatFileSize = (bytes) => {
   const size =
@@ -95,9 +85,7 @@ const formatFileSize = (bytes) => {
   ).toFixed(2)} KB`;
 };
 
-// =====================================================
 // MAP BACKEND DOCUMENT → UI
-// =====================================================
 
 const mapBackendDocument = (doc) => ({
   id:
@@ -177,17 +165,13 @@ const mapBackendDocument = (doc) => ({
     '',
 });
 
-// =====================================================
 // PROFILE
-// =====================================================
 
 export const Profile = () => {
   const navigate =
     useNavigate();
 
-  // ===================================================
   // USER PROFILE
-  // ===================================================
 
   const [
     userProfile,
@@ -204,9 +188,7 @@ export const Profile = () => {
     setProfileFetchError,
   ] = useState('');
 
-  // ===================================================
   // GET PROFILE
-  // ===================================================
 
   useEffect(() => {
     const fetchUserProfile =
@@ -281,9 +263,7 @@ export const Profile = () => {
     fetchUserProfile();
   }, []);
 
-  // ===================================================
   // MY UPLOADED DOCUMENTS
-  // ===================================================
 
   const [
     uploadedDocs,
@@ -323,9 +303,7 @@ export const Profile = () => {
     loadMyDocuments();
   }, [loadMyDocuments]);
 
-  // ===================================================
   // SAVED DOCUMENTS
-  // ===================================================
 
   const [
     savedDocs,
@@ -400,9 +378,7 @@ export const Profile = () => {
     loadSavedDocuments();
   }, [loadSavedDocuments]);
 
-  // ===================================================
   // CATEGORIES
-  // ===================================================
 
   const [
     categories,
@@ -452,9 +428,7 @@ export const Profile = () => {
     fetchCategories();
   }, []);
 
-  // ===================================================
   // CATEGORY ID → CATEGORY NAME
-  // ===================================================
 
   const getCategoryName = (
     categoryId,
@@ -475,9 +449,7 @@ export const Profile = () => {
     );
   };
 
-  // ===================================================
   // EDIT PROFILE STATE
-  // ===================================================
 
   const [
     editProfileOpen,
@@ -508,9 +480,7 @@ export const Profile = () => {
     setIsSavingProfile,
   ] = useState(false);
 
-  // ===================================================
   // EDIT DOCUMENT STATE
-  // ===================================================
 
   const [
     editDocModal,
@@ -536,9 +506,7 @@ export const Profile = () => {
     setIsSavingDoc,
   ] = useState(false);
 
-  // ===================================================
   // DELETE DOCUMENT STATE
-  // ===================================================
 
   const [
     deleteModalDoc,
@@ -555,18 +523,14 @@ export const Profile = () => {
     setDeleteError,
   ] = useState('');
 
-  // ===================================================
   // LOGOUT
-  // ===================================================
 
   const [
     isLoggingOut,
     setIsLoggingOut,
   ] = useState(false);
 
-  // ===================================================
   // OPEN EDIT PROFILE
-  // ===================================================
 
   const handleOpenEditProfile =
     () => {
@@ -595,9 +559,7 @@ export const Profile = () => {
       );
     };
 
-  // ===================================================
   // PATCH PROFILE
-  // ===================================================
 
   const handleSaveProfile =
     async (e) => {
@@ -725,9 +687,7 @@ export const Profile = () => {
       }
     };
 
-  // ===================================================
   // OPEN EDIT DOCUMENT
-  // ===================================================
 
   const handleOpenEditDoc =
     (doc) => {
@@ -747,9 +707,7 @@ export const Profile = () => {
       setDocError('');
     };
 
-  // ===================================================
   // PATCH DOCUMENT
-  // ===================================================
 
   const handleSaveDoc =
     async (e) => {
@@ -840,9 +798,7 @@ export const Profile = () => {
       }
     };
 
-  // ===================================================
   // DELETE DOCUMENT
-  // ===================================================
 
   const handleOpenDeleteDoc =
     (doc) => {
@@ -910,9 +866,7 @@ export const Profile = () => {
       setDeleteError('');
     };
 
-  // ===================================================
   // LOGOUT
-  // ===================================================
 
   const handleLogout =
     async () => {
@@ -950,9 +904,7 @@ export const Profile = () => {
       }
     };
 
-  // ===================================================
   // PROFILE STATS THẬT
-  // ===================================================
 
   const totalDownloadsReceived =
     uploadedDocs.reduce(
@@ -997,9 +949,7 @@ export const Profile = () => {
       ).toFixed(1)
       : '0.0';
 
-  // ===================================================
   // PROFILE LOADING STATE
-  // ===================================================
 
   if (isLoadingProfile) {
     return (
@@ -1013,9 +963,7 @@ export const Profile = () => {
     );
   }
 
-  // ===================================================
   // PROFILE ERROR STATE
-  // ===================================================
 
   if (
     profileFetchError ||
@@ -1056,9 +1004,7 @@ export const Profile = () => {
     );
   }
 
-  // ===================================================
   // UI
-  // ===================================================
 
   return (
     <div className="payt-profile-page">

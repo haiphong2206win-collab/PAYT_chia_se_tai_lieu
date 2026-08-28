@@ -1,13 +1,9 @@
 import api from './api';
 
-// =====================================================
 // ADMIN CATEGORY API
-// =====================================================
 
-// =====================================================
 // CREATE CATEGORY
 // POST /admin/category
-// =====================================================
 
 export const createAdminCategoryApi = async (
     categoryData
@@ -20,10 +16,8 @@ export const createAdminCategoryApi = async (
     return response.data;
 };
 
-// =====================================================
 // UPDATE CATEGORY
 // PATCH /admin/category/:categoryId
-// =====================================================
 
 export const updateAdminCategoryApi = async (
     categoryId,
@@ -37,10 +31,8 @@ export const updateAdminCategoryApi = async (
     return response.data;
 };
 
-// =====================================================
 // DELETE CATEGORY
 // DELETE /admin/category/:categoryId
-// =====================================================
 
 export const deleteAdminCategoryApi = async (
     categoryId
@@ -52,14 +44,10 @@ export const deleteAdminCategoryApi = async (
     return response.data;
 };
 
-// =====================================================
 // ADMIN DOCUMENT API
-// =====================================================
 
-// =====================================================
 // GET ALL ADMIN DOCUMENTS
 // GET /admin/documents
-// =====================================================
 
 export const getAdminDocumentsApi = async () => {
     const response = await api.get(
@@ -69,7 +57,6 @@ export const getAdminDocumentsApi = async () => {
     return response.data;
 };
 
-// =====================================================
 // UPDATE DOCUMENT STATUS
 // PATCH /admin/documents/:documentId/status
 //
@@ -77,7 +64,6 @@ export const getAdminDocumentsApi = async () => {
 // {
 //   status: "approved" | "rejected" | "pending"
 // }
-// =====================================================
 
 export const updateAdminDocumentStatusApi = async (
     documentId,
@@ -93,10 +79,8 @@ export const updateAdminDocumentStatusApi = async (
     return response.data;
 };
 
-// =====================================================
 // DELETE ADMIN DOCUMENT
 // DELETE /admin/documents/:documentId
-// =====================================================
 
 export const deleteAdminDocumentApi = async (
     documentId
@@ -108,9 +92,7 @@ export const deleteAdminDocumentApi = async (
     return response.data;
 };
 
-// =====================================================
 // ADMIN USER API
-// =====================================================
 
 // GET /admin/users
 export const getAdminUsersApi = async () => {
@@ -164,9 +146,7 @@ export const updateAdminUserRoleApi = async (
 
 
 
-// =====================================================
 // ADMIN REVIEW API
-// =====================================================
 
 // GET /admin/reviews
 export const getAdminReviewsApi = async () => {

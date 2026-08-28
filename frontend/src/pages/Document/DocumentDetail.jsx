@@ -17,9 +17,7 @@ import DocumentInfo from '../../components/document/detail/DocumentInfo';
 import RelatedDocuments from '../../components/document/detail/RelatedDocuments';
 import ReviewSection from '../../components/document/review/ReviewSection';
 
-// =====================================================
 // DOCUMENT API
-// =====================================================
 
 import {
   getDocumentByIdApi,
@@ -36,9 +34,7 @@ import {
   deleteReviewApi,
 } from '../../services/document.api';
 
-// =====================================================
 // USER API
-// =====================================================
 
 import {
   getUserProfileApi,
@@ -50,9 +46,7 @@ import {
 
 import './DocumentDetail.css';
 
-// =====================================================
 // HELPER: EXTRACT SAVED STATUS
-// =====================================================
 
 const extractSavedStatus = (response) => {
   if (
@@ -101,9 +95,7 @@ const extractSavedStatus = (response) => {
   return false;
 };
 
-// =====================================================
 // HELPER: MAP BACKEND REVIEW → UI REVIEW
-// =====================================================
 
 const mapBackendReview = (review) => ({
   id:
@@ -164,15 +156,12 @@ const mapBackendReview = (review) => ({
   },
 });
 
-// =====================================================
 // HELPER: FORMAT FILE SIZE
-// =====================================================
 //
 // GET /documents trả file_size bằng bytes.
 // DocumentCard của UI đang hiển thị dạng KB / MB,
 // vì vậy map về đúng format trước khi render.
 //
-// =====================================================
 
 const formatRelatedFileSize = (bytes) => {
   const size =
@@ -198,9 +187,7 @@ const formatRelatedFileSize = (bytes) => {
   ).toFixed(2)} KB`;
 };
 
-// =====================================================
 // HELPER: FORMAT FILE TYPE
-// =====================================================
 //
 // Ví dụ Backend:
 // application/pdf
@@ -208,7 +195,6 @@ const formatRelatedFileSize = (bytes) => {
 // UI:
 // PDF
 //
-// =====================================================
 
 const formatRelatedFileType = (
   fileType
@@ -223,9 +209,7 @@ const formatRelatedFileType = (
     .toUpperCase();
 };
 
-// =====================================================
 // HELPER: MAP BACKEND DOCUMENT → DOCUMENT CARD
-// =====================================================
 //
 // Related Documents dùng lại component DocumentCard.
 //
@@ -246,7 +230,6 @@ const formatRelatedFileType = (
 // Không tạo dữ liệu giả cho Subject vì Backend hiện
 // chưa có field Subject tương ứng.
 //
-// =====================================================
 
 const mapBackendRelatedDocument = (
   doc
@@ -338,16 +321,12 @@ const mapBackendRelatedDocument = (
   },
 });
 
-// =====================================================
 // DOCUMENT DETAIL COMPONENT
-// =====================================================
 
 export const DocumentDetail = () => {
   const { id } = useParams();
 
-  // =====================================================
   // 1. DOCUMENT STATE
-  // =====================================================
 
   const [
     document,
@@ -364,9 +343,7 @@ export const DocumentDetail = () => {
     setDocumentError,
   ] = useState('');
 
-  // =====================================================
   // RELATED DOCUMENTS STATE
-  // =====================================================
   //
   // Không dùng MOCK_DOCUMENTS nữa.
   //
@@ -376,7 +353,6 @@ export const DocumentDetail = () => {
   //
   // với categoryId của document hiện tại.
   //
-  // =====================================================
 
   const [
     relatedDocs,
@@ -393,9 +369,7 @@ export const DocumentDetail = () => {
     setRelatedDocsError,
   ] = useState('');
 
-  // =====================================================
   // 2. DOWNLOAD STATE
-  // =====================================================
 
   const [
     downloadCount,
@@ -407,9 +381,7 @@ export const DocumentDetail = () => {
     setIsDownloading,
   ] = useState(false);
 
-  // =====================================================
   // 3. SAVE DOCUMENT STATE
-  // =====================================================
 
   const [
     isSaved,
@@ -426,9 +398,7 @@ export const DocumentDetail = () => {
     setIsSavingLibrary,
   ] = useState(false);
 
-  // =====================================================
   // 4. REVIEWS STATE
-  // =====================================================
 
   const [
     reviews,
@@ -450,9 +420,7 @@ export const DocumentDetail = () => {
     setReviewTotalCount,
   ] = useState(0);
 
-  // =====================================================
   // 5. CURRENT USER STATE
-  // =====================================================
   //
   // Dùng để xác định review nào là của user
   // đang đăng nhập.
@@ -461,7 +429,6 @@ export const DocumentDetail = () => {
   // Edit
   // Delete
   //
-  // =====================================================
 
   const [
     currentUserId,
@@ -473,9 +440,7 @@ export const DocumentDetail = () => {
     setIsLoadingCurrentUser,
   ] = useState(true);
 
-  // =====================================================
   // 6. CREATE REVIEW STATE
-  // =====================================================
 
   const [
     reviewRating,
@@ -497,9 +462,7 @@ export const DocumentDetail = () => {
     setReviewSubmitError,
   ] = useState('');
 
-  // =====================================================
   // 7. EDIT REVIEW STATE
-  // =====================================================
 
   const [
     editingReviewId,
@@ -526,18 +489,14 @@ export const DocumentDetail = () => {
     setReviewActionError,
   ] = useState('');
 
-  // =====================================================
   // 8. DELETE REVIEW STATE
-  // =====================================================
 
   const [
     deletingReviewId,
     setDeletingReviewId,
   ] = useState(null);
 
-  // =====================================================
   // 9. TOAST STATE
-  // =====================================================
 
   const [
     toastMessage,
@@ -549,9 +508,7 @@ export const DocumentDetail = () => {
     setToastType,
   ] = useState('success');
 
-  // =====================================================
   // 10. SHOW TOAST
-  // =====================================================
 
   const showToast = (
     message,
@@ -561,9 +518,7 @@ export const DocumentDetail = () => {
     setToastType(type);
   };
 
-  // =====================================================
   // 11. LOAD DOCUMENT DETAIL
-  // =====================================================
   //
   // GET /documents/:documentId
   //
@@ -575,7 +530,6 @@ export const DocumentDetail = () => {
   // để refresh rating/count mà không làm
   // cả trang nhảy về Loading.
   //
-  // =====================================================
 
   const loadDocumentDetail =
     useCallback(
@@ -743,17 +697,13 @@ export const DocumentDetail = () => {
       [id]
     );
 
-  // =====================================================
   // LOAD DOCUMENT KHI MỞ TRANG
-  // =====================================================
 
   useEffect(() => {
     loadDocumentDetail();
   }, [loadDocumentDetail]);
 
-  // =====================================================
   // 11A. LOAD RELATED DOCUMENTS
-  // =====================================================
   //
   // Luồng:
   //
@@ -789,7 +739,6 @@ export const DocumentDetail = () => {
   // Nếu category chưa có tài liệu approved khác,
   // Related Documents sẽ hiển thị Empty State.
   //
-  // =====================================================
 
   const loadRelatedDocuments =
     useCallback(
@@ -829,9 +778,7 @@ export const DocumentDetail = () => {
               'DESC',
           };
 
-          // =============================================
           // GET /documents?categoryId=...
-          // =============================================
 
           const response =
             await getDocumentsApi(
@@ -849,11 +796,9 @@ export const DocumentDetail = () => {
                 : []
             );
 
-          // =============================================
           // 1. Loại document đang xem.
           // 2. Map Backend → UI.
           // 3. Chỉ lấy tối đa 3 tài liệu.
-          // =============================================
 
           const mappedRelatedDocs =
             backendDocuments
@@ -911,13 +856,10 @@ export const DocumentDetail = () => {
     loadRelatedDocuments();
   }, [loadRelatedDocuments]);
 
-  // =====================================================
   // 12. LOAD REVIEWS
-  // =====================================================
   //
   // GET /documents/:documentId/reviews
   //
-  // =====================================================
 
   const loadReviews =
     useCallback(
@@ -962,7 +904,6 @@ export const DocumentDetail = () => {
             mappedReviews
           );
 
-          // ===========================================
           // Backend có pagination.
           //
           // Nếu có totalCount:
@@ -970,7 +911,6 @@ export const DocumentDetail = () => {
           //
           // Nếu không:
           // dùng số review hiện có.
-          // ===========================================
 
           setReviewTotalCount(
             Number(
@@ -1011,21 +951,16 @@ export const DocumentDetail = () => {
       [id]
     );
 
-  // =====================================================
   // LOAD REVIEWS KHI MỞ TRANG
-  // =====================================================
 
   useEffect(() => {
     loadReviews();
   }, [loadReviews]);
 
-  // =====================================================
   // 13. GET CURRENT USER
-  // =====================================================
   //
   // GET /users/profile
   //
-  // =====================================================
 
   useEffect(() => {
     const loadCurrentUser =
@@ -1067,13 +1002,10 @@ export const DocumentDetail = () => {
     loadCurrentUser();
   }, []);
 
-  // =====================================================
   // 14. CHECK SAVED STATUS
-  // =====================================================
   //
   // GET /documents/:documentId/save
   //
-  // =====================================================
 
   useEffect(() => {
     const checkSavedStatus =
@@ -1121,13 +1053,10 @@ export const DocumentDetail = () => {
     checkSavedStatus();
   }, [id]);
 
-  // =====================================================
   // 15. DOWNLOAD DOCUMENT
-  // =====================================================
   //
   // GET /documents/:documentId/download
   //
-  // =====================================================
 
   const handleDownloadClick =
     async () => {
@@ -1151,10 +1080,8 @@ export const DocumentDetail = () => {
           'content-type'
           ] || '';
 
-        // =============================================
         // CASE 1:
         // Backend trả JSON có fileUrl
-        // =============================================
 
         if (
           contentType.includes(
@@ -1202,10 +1129,8 @@ export const DocumentDetail = () => {
           link.remove();
         }
 
-        // =============================================
         // CASE 2:
         // Backend trả file trực tiếp
-        // =============================================
 
         else {
           const blobUrl =
@@ -1270,9 +1195,7 @@ export const DocumentDetail = () => {
       }
     };
 
-  // =====================================================
   // 16. SAVE / UNSAVE DOCUMENT
-  // =====================================================
 
   const handleSaveLibrary =
     async () => {
@@ -1289,9 +1212,7 @@ export const DocumentDetail = () => {
       );
 
       try {
-        // =============================================
         // CHƯA SAVE → SAVE
-        // =============================================
 
         if (!isSaved) {
           const response =
@@ -1308,9 +1229,7 @@ export const DocumentDetail = () => {
           );
         }
 
-        // =============================================
         // ĐÃ SAVE → UNSAVE
-        // =============================================
 
         else {
           const response =
@@ -1346,9 +1265,7 @@ export const DocumentDetail = () => {
       }
     };
 
-  // =====================================================
   // 17. CREATE REVIEW
-  // =====================================================
   //
   // POST /documents/:documentId/reviews
   //
@@ -1359,7 +1276,6 @@ export const DocumentDetail = () => {
   //   comment: "..."
   // }
   //
-  // =====================================================
 
   const handleSubmitReview =
     async (e) => {
@@ -1379,9 +1295,7 @@ export const DocumentDetail = () => {
         return;
       }
 
-      // ===============================================
       // RATING 1 → 5
-      // ===============================================
 
       if (
         reviewRating < 1 ||
@@ -1424,13 +1338,11 @@ export const DocumentDetail = () => {
           'success'
         );
 
-        // =============================================
         // REFRESH:
         //
         // Reviews
         // Average Rating
         // Review Count
-        // =============================================
 
         await Promise.all([
           loadReviews(false),
@@ -1458,9 +1370,7 @@ export const DocumentDetail = () => {
       }
     };
 
-  // =====================================================
   // 18. OPEN EDIT REVIEW
-  // =====================================================
 
   const handleOpenEditReview =
     (review) => {
@@ -1481,9 +1391,7 @@ export const DocumentDetail = () => {
       );
     };
 
-  // =====================================================
   // 19. CANCEL EDIT REVIEW
-  // =====================================================
 
   const handleCancelEditReview =
     () => {
@@ -1504,13 +1412,10 @@ export const DocumentDetail = () => {
       setReviewActionError('');
     };
 
-  // =====================================================
   // 20. UPDATE REVIEW
-  // =====================================================
   //
   // PATCH /reviews/:reviewId
   //
-  // =====================================================
 
   const handleUpdateReview =
     async (e) => {
@@ -1594,13 +1499,10 @@ export const DocumentDetail = () => {
       }
     };
 
-  // =====================================================
   // 21. DELETE REVIEW
-  // =====================================================
   //
   // DELETE /reviews/:reviewId
   //
-  // =====================================================
 
   const handleDeleteReview =
     async (reviewId) => {
@@ -1676,9 +1578,7 @@ export const DocumentDetail = () => {
       }
     };
 
-  // =====================================================
   // 22. SHARE DOCUMENT
-  // =====================================================
 
   const handleShareClick =
     () => {
@@ -1700,9 +1600,7 @@ export const DocumentDetail = () => {
       );
     };
 
-  // =====================================================
   // 23. CHECK REVIEW OWNERSHIP
-  // =====================================================
 
   const isOwnReview =
     (review) => {
@@ -1723,16 +1621,13 @@ export const DocumentDetail = () => {
       );
     };
 
-  // =====================================================
   // REVIEW HIỆN TẠI CỦA USER
-  // =====================================================
   //
   // Nếu user đã review document:
   //
   // Không hiện Write a Review nữa.
   // Thay vào đó user Edit/Delete review cũ.
   //
-  // =====================================================
 
   const myReview =
     currentUserId
@@ -1744,9 +1639,7 @@ export const DocumentDetail = () => {
       )
       : null;
 
-  // =====================================================
   // 24. LOADING DOCUMENT
-  // =====================================================
 
   if (
     isLoadingDocument
@@ -1766,9 +1659,7 @@ export const DocumentDetail = () => {
     );
   }
 
-  // =====================================================
   // 25. DOCUMENT ERROR
-  // =====================================================
 
   if (
     documentError ||
@@ -1803,9 +1694,7 @@ export const DocumentDetail = () => {
     );
   }
 
-  // =====================================================
   // 26. UI
-  // =====================================================
 
   return (
     <div className="payt-document-detail-page">

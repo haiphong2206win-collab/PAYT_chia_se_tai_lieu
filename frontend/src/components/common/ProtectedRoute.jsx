@@ -11,9 +11,7 @@ import {
     getUserProfileApi,
 } from '../../services/user.api';
 
-// =====================================================
 // PROTECTED ROUTE
-// =====================================================
 //
 // Mục đích:
 //
@@ -30,7 +28,6 @@ import {
 // → chưa đăng nhập / token hết hạn
 // → chuyển về /login.
 //
-// =====================================================
 
 const ProtectedRoute = ({
     children,
@@ -54,15 +51,12 @@ const ProtectedRoute = ({
         setAuthError,
     ] = useState('');
 
-    // ===================================================
     // CHECK SESSION
-    // ===================================================
 
     useEffect(() => {
         const checkAuthentication =
             async () => {
                 try {
-                    // ===========================================
                     // FE không cần đọc JWT.
                     //
                     // Cookie token là httpOnly.
@@ -71,7 +65,6 @@ const ProtectedRoute = ({
                     // withCredentials: true
                     //
                     // nên browser tự gửi cookie cho Backend.
-                    // ===========================================
 
                     await getUserProfileApi();
 
@@ -90,10 +83,8 @@ const ProtectedRoute = ({
                     const status =
                         error.response?.status;
 
-                    // ===========================================
                     // 401 / 403
                     // → không có quyền truy cập.
-                    // ===========================================
 
                     if (
                         status === 401 ||
@@ -106,10 +97,8 @@ const ProtectedRoute = ({
                         return;
                     }
 
-                    // ===========================================
                     // Nếu là lỗi server/network
                     // thì không nên coi như user logout.
-                    // ===========================================
 
                     setAuthError(
                         'Unable to verify your login session.'
@@ -120,9 +109,7 @@ const ProtectedRoute = ({
         checkAuthentication();
     }, []);
 
-    // ===================================================
     // LOADING
-    // ===================================================
 
     if (
         isAuthenticated === null &&
@@ -142,9 +129,7 @@ const ProtectedRoute = ({
         );
     }
 
-    // ===================================================
     // SERVER / NETWORK ERROR
-    // ===================================================
 
     if (authError) {
         return (
@@ -161,9 +146,7 @@ const ProtectedRoute = ({
         );
     }
 
-    // ===================================================
     // NOT LOGGED IN
-    // ===================================================
 
     if (!isAuthenticated) {
         return (
@@ -174,9 +157,7 @@ const ProtectedRoute = ({
         );
     }
 
-    // ===================================================
     // LOGGED IN
-    // ===================================================
 
     return children;
 };

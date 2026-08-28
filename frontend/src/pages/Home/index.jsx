@@ -25,17 +25,13 @@ import {
 import SearchBar from '../../components/common/SearchBar';
 import DocumentCard from '../../components/document/DocumentCard';
 
-// =====================================================
 // DOCUMENT API
-// =====================================================
 
 import {
   getDocumentsApi,
 } from '../../services/document.api';
 
-// =====================================================
 // CATEGORY API
-// =====================================================
 
 import {
   getCategories,
@@ -47,9 +43,7 @@ import {
 
 import './Home.css';
 
-// =====================================================
 // HOME API CACHE
-// =====================================================
 //
 // Trong môi trường React Dev + StrictMode,
 // useEffect có thể chạy lại.
@@ -62,7 +56,6 @@ import './Home.css';
 // Cache ngắn giúp tránh gọi API trùng quá nhanh,
 // đặc biệt sau khi Backend từng trả 429.
 //
-// =====================================================
 
 let homeDataCache = null;
 let homeDataCacheTime = 0;
@@ -70,9 +63,7 @@ let homeDataRequest = null;
 
 const HOME_CACHE_TTL = 5000;
 
-// =====================================================
 // FORMAT FILE SIZE
-// =====================================================
 
 const formatFileSize = (bytes) => {
   const size =
@@ -98,9 +89,7 @@ const formatFileSize = (bytes) => {
   ).toFixed(2)} KB`;
 };
 
-// =====================================================
 // MAP BACKEND DOCUMENT → DOCUMENT CARD
-// =====================================================
 //
 // Backend:
 //
@@ -124,7 +113,6 @@ const formatFileSize = (bytes) => {
 // rating
 // reviewCount
 //
-// =====================================================
 
 const mapBackendDocument = (
   doc
@@ -222,9 +210,7 @@ const mapBackendDocument = (
   },
 });
 
-// =====================================================
 // MAP BACKEND CATEGORY → HOME CATEGORY
-// =====================================================
 
 const mapBackendCategory = (
   category
@@ -247,9 +233,7 @@ const mapBackendCategory = (
     'Explore study materials in this category.',
 });
 
-// =====================================================
 // LOAD HOME DATA
-// =====================================================
 //
 // Home cần 3 nhóm dữ liệu:
 //
@@ -261,16 +245,13 @@ const mapBackendCategory = (
 // 3. Recent Documents
 //    sortBy = created_at
 //
-// =====================================================
 
 const loadHomeDataApi =
   async () => {
     const now =
       Date.now();
 
-    // =================================================
     // CACHE CÒN MỚI
-    // =================================================
 
     if (
       homeDataCache &&
@@ -281,17 +262,13 @@ const loadHomeDataApi =
       return homeDataCache;
     }
 
-    // =================================================
     // REQUEST ĐANG CHẠY
-    // =================================================
 
     if (homeDataRequest) {
       return homeDataRequest;
     }
 
-    // =================================================
     // GỌI BACKEND THẬT
-    // =================================================
 
     homeDataRequest =
       Promise.all([
@@ -357,44 +334,34 @@ const loadHomeDataApi =
     }
   };
 
-// =====================================================
 // HOME COMPONENT
-// =====================================================
 
 export const Home = () => {
   const navigate =
     useNavigate();
 
-  // ===================================================
   // 1. CATEGORY STATE
-  // ===================================================
 
   const [
     categories,
     setCategories,
   ] = useState([]);
 
-  // ===================================================
   // 2. POPULAR DOCUMENT STATE
-  // ===================================================
 
   const [
     popularDocs,
     setPopularDocs,
   ] = useState([]);
 
-  // ===================================================
   // 3. RECENT DOCUMENT STATE
-  // ===================================================
 
   const [
     recentDocs,
     setRecentDocs,
   ] = useState([]);
 
-  // ===================================================
   // 4. TOTAL DOCUMENT COUNT
-  // ===================================================
   //
   // Lấy từ:
   //
@@ -404,16 +371,13 @@ export const Home = () => {
   //
   // Không dùng số mock "50,000+" nữa.
   //
-  // ===================================================
 
   const [
     totalDocuments,
     setTotalDocuments,
   ] = useState(0);
 
-  // ===================================================
   // 5. HOME LOADING / ERROR
-  // ===================================================
 
   const [
     isLoadingHome,
@@ -425,9 +389,7 @@ export const Home = () => {
     setHomeError,
   ] = useState('');
 
-  // ===================================================
   // 6. LOAD HOME DATA
-  // ===================================================
 
   useEffect(() => {
     let isMounted =
@@ -453,9 +415,7 @@ export const Home = () => {
             return;
           }
 
-          // =============================================
           // CATEGORY
-          // =============================================
 
           const backendCategories =
             categoryResponse.data ||
@@ -475,9 +435,7 @@ export const Home = () => {
             mappedCategories
           );
 
-          // =============================================
           // POPULAR DOCUMENTS
-          // =============================================
 
           const backendPopularDocs =
             popularResponse.documents ||
@@ -498,9 +456,7 @@ export const Home = () => {
             mappedPopularDocs
           );
 
-          // =============================================
           // RECENT DOCUMENTS
-          // =============================================
 
           const backendRecentDocs =
             recentResponse.documents ||
@@ -521,9 +477,7 @@ export const Home = () => {
             mappedRecentDocs
           );
 
-          // =============================================
           // TOTAL DOCUMENTS
-          // =============================================
 
           const totalCount =
             recentResponse
@@ -576,9 +530,7 @@ export const Home = () => {
     };
   }, []);
 
-  // ===================================================
   // 7. CATEGORY ICON
-  // ===================================================
   //
   // Backend hiện không trả icon.
   //
@@ -588,7 +540,6 @@ export const Home = () => {
   // Vì vậy FE luân phiên icon để giữ
   // giao diện Home hiện tại.
   //
-  // ===================================================
 
   const getCategoryIcon =
     (index) => {
@@ -615,9 +566,7 @@ export const Home = () => {
       );
     };
 
-  // ===================================================
   // 8. CATEGORY CLICK
-  // ===================================================
   //
   // UI cũ:
   //
@@ -633,7 +582,6 @@ export const Home = () => {
   //
   // DocumentList đã hỗ trợ query này.
   //
-  // ===================================================
 
   const handleCategoryClick =
     (categoryId) => {
@@ -648,9 +596,7 @@ export const Home = () => {
       );
     };
 
-  // ===================================================
   // 9. UI
-  // ===================================================
 
   return (
     <div className="payt-home-page">
@@ -858,9 +804,7 @@ export const Home = () => {
           ) : categories.length ===
             0 ? (
 
-            // ===========================================
             // CATEGORY EMPTY
-            // ===========================================
 
             <div className="payt-card payt-grid-empty">
 
@@ -882,9 +826,7 @@ export const Home = () => {
 
           ) : (
 
-            // ===========================================
             // CATEGORY DATA
-            // ===========================================
 
             <div className="categories-grid">
 
@@ -1045,13 +987,11 @@ export const Home = () => {
           ) : popularDocs.length ===
             0 ? (
 
-            // ===========================================
             // EMPTY
             //
             // Có thể xảy ra khi Backend hiện chỉ trả
             // document status = approved
             // và chưa có document approved.
-            // ===========================================
 
             <div className="payt-card payt-grid-empty">
 
@@ -1180,9 +1120,7 @@ export const Home = () => {
             ) : recentDocs.length ===
               0 ? (
 
-              // =========================================
               // EMPTY
-              // =========================================
 
               <div className="payt-grid-empty">
 

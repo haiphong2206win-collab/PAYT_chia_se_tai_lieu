@@ -21,15 +21,11 @@ import { loginApi } from '../../services/auth.api';
 import './Auth.css';
 
 export const Login = () => {
-  // =====================================================
   // ROUTER
-  // =====================================================
 
   const navigate = useNavigate();
 
-  // =====================================================
   // 1. FORM STATE
-  // =====================================================
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,9 +49,7 @@ export const Login = () => {
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  // =====================================================
   // 2. VALIDATE EMAIL
-  // =====================================================
 
   const validateEmail = (val) => {
     if (!val || !val.trim()) {
@@ -72,9 +66,7 @@ export const Login = () => {
     return '';
   };
 
-  // =====================================================
   // 3. VALIDATE PASSWORD
-  // =====================================================
 
   const validatePassword = (val) => {
     if (!val) {
@@ -84,9 +76,7 @@ export const Login = () => {
     return '';
   };
 
-  // =====================================================
   // 4. VALIDATE TOÀN FORM
-  // =====================================================
 
   const validateForm = () => {
     const newErrors = {};
@@ -107,9 +97,7 @@ export const Login = () => {
     return newErrors;
   };
 
-  // =====================================================
   // 5. LOGIN THẬT VỚI BACKEND
-  // =====================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -157,9 +145,7 @@ export const Login = () => {
       const response =
         await loginApi(credentials);
 
-      // =================================================
       // ROLE TỪ BACKEND
-      // =================================================
 
       // BE hiện đã trả role trong response login.
       // Tạm lưu role vào sessionStorage để
@@ -186,9 +172,7 @@ export const Login = () => {
       // Xóa password khỏi form sau khi login
       setPassword('');
 
-      // =================================================
       // REDIRECT THEO ROLE
-      // =================================================
 
       if (userRole === 'admin') {
         // Admin đăng nhập xong đi thẳng vào
@@ -231,9 +215,7 @@ export const Login = () => {
     }
   };
 
-  // =====================================================
   // 6. EMAIL CHANGE
-  // =====================================================
 
   const handleEmailChange = (e) => {
     const val = e.target.value;
@@ -258,9 +240,7 @@ export const Login = () => {
     }
   };
 
-  // =====================================================
   // 7. PASSWORD CHANGE
-  // =====================================================
 
   const handlePasswordChange = (e) => {
     const val = e.target.value;
@@ -284,9 +264,7 @@ export const Login = () => {
     }
   };
 
-  // =====================================================
   // 8. UI
-  // =====================================================
 
   return (
     <div className="auth-form-content">

@@ -30,9 +30,7 @@ import {
 
 import '../../components/admin/Admin.css';
 
-// =====================================================
 // FORMAT DATE
-// =====================================================
 
 const formatJoinedDate = (dateValue) => {
   if (!dateValue) {
@@ -48,9 +46,7 @@ const formatJoinedDate = (dateValue) => {
   return date.toLocaleDateString('vi-VN');
 };
 
-// =====================================================
 // MAP BACKEND USER → ADMIN UI
-// =====================================================
 
 const mapAdminUser = (user) => ({
   id:
@@ -94,14 +90,10 @@ const mapAdminUser = (user) => ({
     ),
 });
 
-// =====================================================
 // ADMIN USERS
-// =====================================================
 
 export const Users = () => {
-  // ===================================================
   // DATA
-  // ===================================================
 
   const [
     users,
@@ -118,9 +110,7 @@ export const Users = () => {
     setLoadError,
   ] = useState('');
 
-  // ===================================================
   // FILTERS
-  // ===================================================
 
   const [
     search,
@@ -137,9 +127,7 @@ export const Users = () => {
     setRoleFilter,
   ] = useState('all');
 
-  // ===================================================
   // PAGINATION
-  // ===================================================
 
   const [
     currentPage,
@@ -148,9 +136,7 @@ export const Users = () => {
 
   const itemsPerPage = 5;
 
-  // ===================================================
   // ACTION STATE
-  // ===================================================
 
   const [
     updatingUserId,
@@ -167,9 +153,7 @@ export const Users = () => {
     setSuccessMessage,
   ] = useState('');
 
-  // ===================================================
   // GET /admin/users
-  // ===================================================
 
   const loadAdminUsers =
     useCallback(async () => {
@@ -225,9 +209,7 @@ export const Users = () => {
     loadAdminUsers();
   }, [loadAdminUsers]);
 
-  // ===================================================
   // FILTERED USERS
-  // ===================================================
 
   const filteredUsers =
     useMemo(() => {
@@ -285,9 +267,7 @@ export const Users = () => {
       roleFilter,
     ]);
 
-  // ===================================================
   // PAGINATION
-  // ===================================================
 
   const paginatedUsers =
     useMemo(() => {
@@ -326,9 +306,7 @@ export const Users = () => {
     totalPages,
   ]);
 
-  // ===================================================
   // SUCCESS MESSAGE
-  // ===================================================
 
   const showSuccessMessage =
     (message) => {
@@ -341,7 +319,6 @@ export const Users = () => {
       }, 3000);
     };
 
-  // ===================================================
   // PATCH USER STATUS
   //
   // PATCH /admin/users/:userId/status
@@ -349,7 +326,6 @@ export const Users = () => {
   // {
   //   status: "active" | "locked"
   // }
-  // ===================================================
 
   const handleToggleStatus =
     async (user) => {
@@ -409,7 +385,6 @@ export const Users = () => {
       }
     };
 
-  // ===================================================
   // PATCH USER ROLE
   //
   // PATCH /admin/users/:userId/role
@@ -417,7 +392,6 @@ export const Users = () => {
   // {
   //   role: "admin" | "student"
   // }
-  // ===================================================
 
   const handleToggleRole =
     async (user) => {
@@ -477,9 +451,7 @@ export const Users = () => {
       }
     };
 
-  // ===================================================
   // TABLE COLUMNS
-  // ===================================================
 
   const columns = [
     {
@@ -505,9 +477,7 @@ export const Users = () => {
     },
   ];
 
-  // ===================================================
   // UI
-  // ===================================================
 
   return (
     <div className="admin-page-content">

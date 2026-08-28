@@ -26,15 +26,11 @@ import {
 
 import './DocumentList.css';
 
-// =====================================================
 // DOCUMENTS / PAGE
-// =====================================================
 
 const ITEMS_PER_PAGE = 6;
 
-// =====================================================
 // SORT OPTIONS
-// =====================================================
 //
 // Chỉ dùng field Backend THỰC SỰ hỗ trợ:
 //
@@ -46,7 +42,6 @@ const ITEMS_PER_PAGE = 6;
 // Không dùng average_rating vì API contract hiện
 // chưa hỗ trợ sortBy average_rating.
 //
-// =====================================================
 
 const DOCUMENT_SORT_OPTIONS = [
   {
@@ -67,9 +62,7 @@ const DOCUMENT_SORT_OPTIONS = [
   },
 ];
 
-// =====================================================
 // MAP SORT UI → BACKEND QUERY
-// =====================================================
 
 const SORT_QUERY_MAP = {
   newest: {
@@ -93,9 +86,7 @@ const SORT_QUERY_MAP = {
   },
 };
 
-// =====================================================
 // FORMAT FILE SIZE
-// =====================================================
 
 const formatFileSize = (
   bytes
@@ -125,9 +116,7 @@ const formatFileSize = (
   ).toFixed(2)} KB`;
 };
 
-// =====================================================
 // FORMAT FILE TYPE
-// =====================================================
 
 const formatFileType = (
   fileType
@@ -172,9 +161,7 @@ const formatFileType = (
   return 'Other';
 };
 
-// =====================================================
 // NORMALIZE STRING
-// =====================================================
 //
 // Dùng để map link cũ:
 //
@@ -182,7 +169,6 @@ const formatFileType = (
 //
 // sang Category thật từ Backend.
 //
-// =====================================================
 
 const normalizeString = (
   value
@@ -196,9 +182,7 @@ const normalizeString = (
       )
     : '';
 
-// =====================================================
 // MAP BACKEND DOCUMENT → UI
-// =====================================================
 
 const mapBackendDocument = (
   doc
@@ -288,15 +272,11 @@ const mapBackendDocument = (
   },
 });
 
-// =====================================================
 // DOCUMENT LIST
-// =====================================================
 
 export const DocumentList =
   () => {
-    // =================================================
     // 1. URL SEARCH PARAMS
-    // =================================================
     //
     // Ví dụ:
     //
@@ -306,7 +286,6 @@ export const DocumentList =
     // &sort=newest
     // &page=2
     //
-    // =================================================
 
     const [
       searchParams,
@@ -352,9 +331,7 @@ export const DocumentList =
         ? rawPage
         : 1;
 
-    // =================================================
     // 2. DOCUMENT STATE
-    // =================================================
 
     const [
       documents,
@@ -374,9 +351,7 @@ export const DocumentList =
     ] =
       useState('');
 
-    // =================================================
     // 3. PAGINATION STATE
-    // =================================================
     //
     // Backend thật trả:
     //
@@ -385,7 +360,6 @@ export const DocumentList =
     // limit
     // totalPage
     //
-    // =================================================
 
     const [
       pagination,
@@ -399,9 +373,7 @@ export const DocumentList =
         totalPage: 0,
       });
 
-    // =================================================
     // 4. CATEGORY STATE
-    // =================================================
 
     const [
       categories,
@@ -415,9 +387,7 @@ export const DocumentList =
     ] =
       useState(true);
 
-    // =================================================
     // 5. MOBILE FILTER STATE
-    // =================================================
 
     const [
       showMobileFilter,
@@ -425,9 +395,7 @@ export const DocumentList =
     ] =
       useState(false);
 
-    // =================================================
     // 6. UPDATE URL PARAMS HELPER
-    // =================================================
 
     const updateUrlParams = (
       changes
@@ -469,15 +437,12 @@ export const DocumentList =
       );
     };
 
-    // =================================================
     // 7. GET CATEGORIES
-    // =================================================
     //
     // GET /category
     //
     // Category thật thay cho Major mock.
     //
-    // =================================================
 
     useEffect(() => {
       const loadCategories =
@@ -521,9 +486,7 @@ export const DocumentList =
       loadCategories();
     }, []);
 
-    // =================================================
     // 8. SUPPORT URL CŨ ?major=
-    // =================================================
     //
     // Home/Figma cũ có thể điều hướng:
     //
@@ -536,7 +499,6 @@ export const DocumentList =
     // Vì vậy tìm Category tương ứng,
     // sau đó đổi URL sang categoryId.
     //
-    // =================================================
 
     useEffect(() => {
       if (
@@ -621,9 +583,7 @@ export const DocumentList =
       setSearchParams,
     ]);
 
-    // =================================================
     // 9. GET DOCUMENTS - SERVER SIDE
-    // =================================================
     //
     // Không còn:
     //
@@ -641,7 +601,6 @@ export const DocumentList =
     // ↓
     // documents + pagination
     //
-    // =================================================
 
     useEffect(() => {
       const loadDocuments =
@@ -662,9 +621,7 @@ export const DocumentList =
               SORT_QUERY_MAP
                 .newest;
 
-            // =========================================
             // QUERY GỬI BACKEND
-            // =========================================
 
             const query = {
               page:
@@ -722,9 +679,7 @@ export const DocumentList =
               mappedDocuments
             );
 
-            // =========================================
             // PAGINATION TỪ BACKEND
-            // =========================================
 
             const backendPagination =
               response.pagination ||
@@ -806,9 +761,7 @@ export const DocumentList =
       currentPage,
     ]);
 
-    // =================================================
     // 10. CATEGORY CHANGE
-    // =================================================
 
     const handleCategoryChange =
       (event) => {
@@ -849,9 +802,7 @@ export const DocumentList =
         );
       };
 
-    // =================================================
     // 11. SORT CHANGE
-    // =================================================
 
     const handleSortChange =
       (event) => {
@@ -865,9 +816,7 @@ export const DocumentList =
         });
       };
 
-    // =================================================
     // 12. PAGE CHANGE
-    // =================================================
 
     const handlePageChange =
       (page) => {
@@ -882,9 +831,7 @@ export const DocumentList =
         });
       };
 
-    // =================================================
     // 13. CLEAR FILTER
-    // =================================================
     //
     // Giữ Search.
     //
@@ -894,7 +841,6 @@ export const DocumentList =
     // Major legacy
     // Page
     //
-    // =================================================
 
     const handleClearFilters =
       () => {
@@ -921,9 +867,7 @@ export const DocumentList =
         );
       };
 
-    // =================================================
     // 14. RESULTS RANGE
-    // =================================================
 
     const resultStart =
       pagination.totalCount >
@@ -944,9 +888,7 @@ export const DocumentList =
         pagination.totalCount
       );
 
-    // =================================================
     // 15. UI
-    // =================================================
 
     return (
       <div className="payt-document-list-page">

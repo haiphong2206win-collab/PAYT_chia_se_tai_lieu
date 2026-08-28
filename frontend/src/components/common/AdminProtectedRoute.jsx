@@ -2,9 +2,7 @@ import {
     Navigate,
 } from 'react-router-dom';
 
-// =====================================================
 // ADMIN PROTECTED ROUTE
-// =====================================================
 //
 // BE hiện tại:
 //
@@ -59,14 +57,11 @@ import {
 // vẫn PHẢI do Backend kiểm tra:
 // JWT cookie + role admin.
 //
-// =====================================================
 
 const AdminProtectedRoute = ({
     children,
 }) => {
-    // ===================================================
     // 1. LẤY ROLE ĐÃ LƯU SAU LOGIN
-    // ===================================================
 
     const storedRole =
         sessionStorage.getItem('userRole');
@@ -77,9 +72,7 @@ const AdminProtectedRoute = ({
         .trim()
         .toLowerCase();
 
-    // ===================================================
     // 2. KHÔNG CÓ ROLE
-    // ===================================================
     //
     // Trường hợp thường gặp:
     // - chưa đăng nhập
@@ -87,7 +80,6 @@ const AdminProtectedRoute = ({
     // - logout đã xóa userRole
     //
     // → đưa về Login.
-    // ===================================================
 
     if (!role) {
         return (
@@ -98,15 +90,12 @@ const AdminProtectedRoute = ({
         );
     }
 
-    // ===================================================
     // 3. ĐÃ LOGIN NHƯNG KHÔNG PHẢI ADMIN
-    // ===================================================
     //
     // Ví dụ:
     // userRole = "student"
     //
     // Student không được nhìn thấy Admin UI.
-    // ===================================================
 
     if (role !== 'admin') {
         return (
@@ -117,13 +106,10 @@ const AdminProtectedRoute = ({
         );
     }
 
-    // ===================================================
     // 4. ADMIN
-    // ===================================================
     //
     // userRole === "admin"
     // → cho phép render /admin/*
-    // ===================================================
 
     return children;
 };

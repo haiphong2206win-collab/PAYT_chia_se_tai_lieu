@@ -9,17 +9,13 @@ import AuthLayout from '../layouts/AuthLayout';
 
 import AdminRoutes from './AdminRoutes';
 
-// =====================================================
 // PROTECTED ROUTES
-// =====================================================
 
 import ProtectedRoute from '../components/common/ProtectedRoute';
 
 import AdminProtectedRoute from '../components/common/AdminProtectedRoute';
 
-// =====================================================
 // PAGES
-// =====================================================
 
 import Home from '../pages/Home';
 import DocumentList from '../pages/Document/DocumentList';
@@ -29,9 +25,7 @@ import Profile from '../pages/Profile';
 import Login from '../pages/Auth/Login';
 import Register from '../pages/Auth/Register';
 
-// =====================================================
 // APP ROUTES
-// =====================================================
 
 export const AppRoutes = () => {
   return (

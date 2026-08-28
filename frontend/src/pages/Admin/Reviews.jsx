@@ -27,9 +27,7 @@ import {
 
 import '../../components/admin/Admin.css';
 
-// =====================================================
 // FORMAT DATE
-// =====================================================
 
 const formatDate = (dateValue) => {
   if (!dateValue) {
@@ -45,9 +43,7 @@ const formatDate = (dateValue) => {
   return date.toLocaleDateString('vi-VN');
 };
 
-// =====================================================
 // MAP BACKEND REVIEW → ADMIN UI
-// =====================================================
 //
 // BE hiện trả dữ liệu review thật gồm:
 // - id
@@ -59,7 +55,6 @@ const formatDate = (dateValue) => {
 // - title
 //
 // Không dùng mock data.
-// =====================================================
 
 const mapAdminReview = (review) => {
   const user =
@@ -134,14 +129,14 @@ const mapAdminReview = (review) => {
   };
 };
 
-// =====================================================
+
 // ADMIN REVIEWS
-// =====================================================
+
 
 export const Reviews = () => {
-  // ===================================================
+
   // DATA
-  // ===================================================
+
 
   const [
     reviews,
@@ -158,9 +153,9 @@ export const Reviews = () => {
     setLoadError,
   ] = useState('');
 
-  // ===================================================
+
   // FILTER
-  // ===================================================
+
 
   const [
     search,
@@ -172,9 +167,9 @@ export const Reviews = () => {
     setRatingFilter,
   ] = useState('all');
 
-  // ===================================================
+
   // PAGINATION
-  // ===================================================
+
 
   const [
     currentPage,
@@ -183,9 +178,9 @@ export const Reviews = () => {
 
   const itemsPerPage = 5;
 
-  // ===================================================
+
   // DELETE STATE
-  // ===================================================
+
 
   const [
     deleteTarget,
@@ -197,9 +192,9 @@ export const Reviews = () => {
     setIsDeleting,
   ] = useState(false);
 
-  // ===================================================
+
   // MESSAGE STATE
-  // ===================================================
+
 
   const [
     actionError,
@@ -211,9 +206,9 @@ export const Reviews = () => {
     setSuccessMessage,
   ] = useState('');
 
-  // ===================================================
+
   // GET /admin/reviews
-  // ===================================================
+
 
   const loadAdminReviews =
     useCallback(async () => {
@@ -276,9 +271,9 @@ export const Reviews = () => {
     loadAdminReviews();
   }, [loadAdminReviews]);
 
-  // ===================================================
+
   // FILTERED REVIEWS
-  // ===================================================
+
 
   const filteredReviews =
     useMemo(() => {
@@ -348,9 +343,9 @@ export const Reviews = () => {
       ratingFilter,
     ]);
 
-  // ===================================================
+
   // PAGINATION
-  // ===================================================
+
 
   const paginatedReviews =
     useMemo(() => {
@@ -389,9 +384,9 @@ export const Reviews = () => {
     totalPages,
   ]);
 
-  // ===================================================
+
   // SUCCESS MESSAGE
-  // ===================================================
+
 
   const showSuccessMessage =
     (message) => {
@@ -404,11 +399,11 @@ export const Reviews = () => {
       }, 3000);
     };
 
-  // ===================================================
+
   // DELETE REVIEW
-  //
+
   // DELETE /admin/reviews/:reviewId
-  // ===================================================
+
 
   const handleDeleteConfirm =
     async () => {
@@ -457,9 +452,9 @@ export const Reviews = () => {
       }
     };
 
-  // ===================================================
+
   // RENDER STARS
-  // ===================================================
+
 
   const renderStars = (
     rating
@@ -517,9 +512,9 @@ export const Reviews = () => {
     );
   };
 
-  // ===================================================
+
   // TABLE COLUMNS
-  // ===================================================
+
 
   const columns = [
     {
@@ -546,9 +541,9 @@ export const Reviews = () => {
     },
   ];
 
-  // ===================================================
+
   // UI
-  // ===================================================
+
 
   return (
     <div className="admin-page-content">

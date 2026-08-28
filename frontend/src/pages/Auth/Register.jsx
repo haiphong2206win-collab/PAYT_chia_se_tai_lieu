@@ -18,9 +18,7 @@ import { registerApi } from '../../services/auth.api';
 import './Auth.css';
 
 export const Register = () => {
-  // =====================================================
   // 1. FORM STATE
-  // =====================================================
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -44,9 +42,7 @@ export const Register = () => {
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  // =====================================================
   // 2. VALIDATION FULL NAME
-  // =====================================================
 
   const validateFullName = (val) => {
     if (!val || !val.trim()) {
@@ -56,9 +52,7 @@ export const Register = () => {
     return '';
   };
 
-  // =====================================================
   // 3. VALIDATION EMAIL
-  // =====================================================
 
   const validateEmail = (val) => {
     if (!val || !val.trim()) {
@@ -75,9 +69,7 @@ export const Register = () => {
     return '';
   };
 
-  // =====================================================
   // 4. VALIDATION PASSWORD
-  // =====================================================
 
   const validatePassword = (val) => {
     if (!val) {
@@ -91,9 +83,7 @@ export const Register = () => {
     return '';
   };
 
-  // =====================================================
   // 5. VALIDATION CONFIRM PASSWORD
-  // =====================================================
 
   const validateConfirmPassword = (
     val,
@@ -110,9 +100,7 @@ export const Register = () => {
     return '';
   };
 
-  // =====================================================
   // 6. VALIDATION TERMS
-  // =====================================================
 
   const validateTerms = (checked) => {
     if (!checked) {
@@ -122,9 +110,7 @@ export const Register = () => {
     return '';
   };
 
-  // =====================================================
   // 7. VALIDATE TOÀN FORM
-  // =====================================================
 
   const validateForm = () => {
     const newErrors = {};
@@ -172,9 +158,7 @@ export const Register = () => {
     return newErrors;
   };
 
-  // =====================================================
   // 8. SUBMIT REGISTER -> BACKEND THẬT
-  // =====================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -254,9 +238,7 @@ export const Register = () => {
     }
   };
 
-  // =====================================================
   // 9. INPUT CHANGE HANDLERS
-  // =====================================================
 
   const handleFullNameChange = (e) => {
     const val = e.target.value;
@@ -374,9 +356,7 @@ export const Register = () => {
     }
   };
 
-  // =====================================================
   // 10. UI
-  // =====================================================
 
   return (
     <div className="auth-form-content">

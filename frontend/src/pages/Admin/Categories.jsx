@@ -21,29 +21,23 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
-// =====================================================
 // CATEGORY API
-// =====================================================
 //
 // GET /category
 //
 // Dùng endpoint Category public để load danh sách thật.
 //
-// =====================================================
 
 import {
   getCategories,
 } from '../../services/category.api';
 
-// =====================================================
 // ADMIN CATEGORY API
-// =====================================================
 //
 // POST   /admin/category
 // PATCH  /admin/category/:categoryId
 // DELETE /admin/category/:categoryId
 //
-// =====================================================
 
 import {
   createAdminCategoryApi,
@@ -53,14 +47,10 @@ import {
 
 import '../../components/admin/Admin.css';
 
-// =====================================================
 // ADMIN CATEGORIES
-// =====================================================
 
 export const Categories = () => {
-  // ===================================================
   // 1. CATEGORY STATE
-  // ===================================================
 
   const [
     categories,
@@ -77,18 +67,14 @@ export const Categories = () => {
     setCategoriesError,
   ] = useState('');
 
-  // ===================================================
   // 2. SEARCH
-  // ===================================================
 
   const [
     search,
     setSearch,
   ] = useState('');
 
-  // ===================================================
   // 3. ADD / EDIT MODAL
-  // ===================================================
 
   const [
     modalOpen,
@@ -124,9 +110,7 @@ export const Categories = () => {
     setIsSubmitting,
   ] = useState(false);
 
-  // ===================================================
   // 4. DELETE
-  // ===================================================
 
   const [
     deleteTarget,
@@ -143,9 +127,7 @@ export const Categories = () => {
     setDeleteError,
   ] = useState('');
 
-  // ===================================================
   // 5. MAP BACKEND CATEGORY → UI
-  // ===================================================
 
   const mapBackendCategory =
     (category) => ({
@@ -166,9 +148,7 @@ export const Categories = () => {
         '',
     });
 
-  // ===================================================
   // 6. LOAD CATEGORIES
-  // ===================================================
   //
   // GET /category
   //
@@ -179,7 +159,6 @@ export const Categories = () => {
   // PATCH thành công → GET lại
   // DELETE thành công → GET lại
   //
-  // ===================================================
 
   const loadCategories =
     useCallback(
@@ -198,11 +177,6 @@ export const Categories = () => {
           const response =
             await getCategories();
 
-          console.log(
-            'Admin Categories GET response:',
-            response
-          );
-
           const backendCategories =
             response.data ||
             response.categories ||
@@ -216,11 +190,6 @@ export const Categories = () => {
                 mapBackendCategory
               )
               : [];
-
-          console.log(
-            'Mapped Admin Categories:',
-            mappedCategories
-          );
 
           setCategories(
             mappedCategories
@@ -250,23 +219,18 @@ export const Categories = () => {
       []
     );
 
-  // ===================================================
   // 7. LOAD WHEN PAGE OPENS
-  // ===================================================
 
   useEffect(() => {
     loadCategories();
   }, [loadCategories]);
 
-  // ===================================================
   // 8. FILTER CATEGORIES
-  // ===================================================
   //
   // Search local ở FE.
   //
   // Category ít dữ liệu nên không cần API search riêng.
   //
-  // ===================================================
 
   const filteredCategories =
     useMemo(() => {
@@ -314,9 +278,7 @@ export const Categories = () => {
       search,
     ]);
 
-  // ===================================================
   // 9. OPEN ADD
-  // ===================================================
 
   const handleOpenAdd =
     () => {
@@ -335,9 +297,7 @@ export const Categories = () => {
       setModalOpen(true);
     };
 
-  // ===================================================
   // 10. OPEN EDIT
-  // ===================================================
 
   const handleOpenEdit =
     (category) => {
@@ -364,9 +324,7 @@ export const Categories = () => {
       setModalOpen(true);
     };
 
-  // ===================================================
   // 11. CLOSE MODAL
-  // ===================================================
 
   const handleCloseModal =
     () => {
@@ -383,9 +341,7 @@ export const Categories = () => {
       setFormError('');
     };
 
-  // ===================================================
   // 12. AUTO GENERATE SLUG
-  // ===================================================
 
   const handleNameChange =
     (e) => {
@@ -438,9 +394,7 @@ export const Categories = () => {
       }
     };
 
-  // ===================================================
   // 13. VALIDATE FORM
-  // ===================================================
 
   const validateForm =
     () => {
@@ -471,9 +425,7 @@ export const Categories = () => {
       return true;
     };
 
-  // ===================================================
   // 14. CREATE / UPDATE CATEGORY
-  // ===================================================
   //
   // ADD:
   //
@@ -489,7 +441,6 @@ export const Categories = () => {
   //
   // Không update local giả.
   //
-  // ===================================================
 
   const handleSubmitForm =
     async (e) => {
@@ -510,9 +461,7 @@ export const Categories = () => {
       setFormError('');
 
       try {
-        // =============================================
         // BODY GỬI BACKEND
-        // =============================================
 
         const categoryData = {
           name:
@@ -531,51 +480,28 @@ export const Categories = () => {
               .trim(),
         };
 
-        console.log(
-          'Admin Category payload:',
-          categoryData
-        );
-
-        // =============================================
         // EDIT
         // PATCH /admin/category/:categoryId
-        // =============================================
 
         if (
           editingCategory
         ) {
-          const response =
-            await updateAdminCategoryApi(
-              editingCategory.id,
-              categoryData
-            );
-
-          console.log(
-            'Admin Category PATCH response:',
-            response
+          await updateAdminCategoryApi(
+            editingCategory.id,
+            categoryData
           );
         }
 
-        // =============================================
         // ADD
         // POST /admin/category
-        // =============================================
 
         else {
-          const response =
-            await createAdminCategoryApi(
-              categoryData
-            );
-
-          console.log(
-            'Admin Category POST response:',
-            response
+          await createAdminCategoryApi(
+            categoryData
           );
         }
 
-        // =============================================
         // REFRESH DATA THẬT
-        // =============================================
 
         await loadCategories(
           false
@@ -615,9 +541,7 @@ export const Categories = () => {
       }
     };
 
-  // ===================================================
   // 15. OPEN DELETE CONFIRM
-  // ===================================================
 
   const handleOpenDelete =
     (category) => {
@@ -628,9 +552,7 @@ export const Categories = () => {
       );
     };
 
-  // ===================================================
   // 16. CLOSE DELETE
-  // ===================================================
 
   const handleCloseDelete =
     () => {
@@ -643,9 +565,7 @@ export const Categories = () => {
       setDeleteError('');
     };
 
-  // ===================================================
   // 17. DELETE CATEGORY
-  // ===================================================
   //
   // DELETE /admin/category/:categoryId
   //
@@ -653,7 +573,6 @@ export const Categories = () => {
   //
   // GET /category lại
   //
-  // ===================================================
 
   const handleDeleteConfirm =
     async () => {
@@ -669,19 +588,11 @@ export const Categories = () => {
       setDeleteError('');
 
       try {
-        const response =
-          await deleteAdminCategoryApi(
-            deleteTarget.id
-          );
-
-        console.log(
-          'Admin Category DELETE response:',
-          response
+        await deleteAdminCategoryApi(
+          deleteTarget.id
         );
 
-        // =============================================
         // GET lại dữ liệu thật.
-        // =============================================
 
         await loadCategories(
           false
@@ -707,9 +618,7 @@ export const Categories = () => {
       }
     };
 
-  // ===================================================
   // 18. TABLE COLUMNS
-  // ===================================================
 
   const columns = [
     {
@@ -738,9 +647,7 @@ export const Categories = () => {
     },
   ];
 
-  // ===================================================
   // 19. UI
-  // ===================================================
 
   return (
     <div className="admin-page-content">
@@ -807,9 +714,7 @@ export const Categories = () => {
 
       ) : categoriesError ? (
 
-        // ===============================================
         // ERROR
-        // ===============================================
 
         <div
           className="payt-card"
@@ -850,9 +755,7 @@ export const Categories = () => {
 
       ) : (
 
-        // ===============================================
         // TABLE
-        // ===============================================
 
         <AdminTable
           columns={

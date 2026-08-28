@@ -1,8 +1,6 @@
 import api from './api';
 
-// =====================================================
 // USER PROFILE REQUEST CACHE
-// =====================================================
 //
 // ProtectedRoute và Profile đều cần:
 //
@@ -26,7 +24,6 @@ import api from './api';
 // 3. Sau update profile / logout
 //    → xóa cache.
 //
-// =====================================================
 
 let profileCache = null;
 let profileCacheTime = 0;
@@ -34,9 +31,7 @@ let profileRequestPromise = null;
 
 const PROFILE_CACHE_TTL = 3000;
 
-// =====================================================
 // CLEAR USER PROFILE CACHE
-// =====================================================
 
 export const clearUserProfileCache = () => {
   profileCache = null;
@@ -44,10 +39,8 @@ export const clearUserProfileCache = () => {
   profileRequestPromise = null;
 };
 
-// =====================================================
 // GET USER PROFILE
 // GET /users/profile
-// =====================================================
 
 export const getUserProfileApi = async (
   options = {}
@@ -58,11 +51,9 @@ export const getUserProfileApi = async (
 
   const now = Date.now();
 
-  // ===================================================
   // CASE 1:
   // Cache còn mới → dùng lại.
   // Không gọi Backend.
-  // ===================================================
 
   if (
     !force &&
@@ -72,19 +63,15 @@ export const getUserProfileApi = async (
     return profileCache;
   }
 
-  // ===================================================
   // CASE 2:
   // Request đang chạy → dùng chung request.
-  // ===================================================
 
   if (profileRequestPromise) {
     return profileRequestPromise;
   }
 
-  // ===================================================
   // CASE 3:
   // Gọi Backend thật.
-  // ===================================================
 
   profileRequestPromise = api
     .get('/users/profile')
@@ -111,10 +98,8 @@ export const getUserProfileApi = async (
   }
 };
 
-// =====================================================
 // UPDATE USER PROFILE
 // PATCH /users/profile
-// =====================================================
 
 export const updateUserProfileApi = async (
   userData
@@ -132,10 +117,8 @@ export const updateUserProfileApi = async (
   return response.data;
 };
 
-// =====================================================
 // GET MY DOCUMENTS
 // GET /users/my-documents
-// =====================================================
 
 export const getMyDocumentsApi = async () => {
   const response =
@@ -146,10 +129,8 @@ export const getMyDocumentsApi = async () => {
   return response.data;
 };
 
-// =====================================================
 // GET SAVED DOCUMENTS
 // GET /users/saved-document
-// =====================================================
 
 export const getSavedDocumentsApi = async () => {
   const response =

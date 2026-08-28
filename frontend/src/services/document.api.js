@@ -4,7 +4,6 @@ import api from "./api";
 // 1. GET ALL DOCUMENTS
 
 
-// =====================================================
 // GET DOCUMENTS
 // GET /documents
 //
@@ -15,7 +14,6 @@ import api from "./api";
 // sortBy
 // order
 // search (sẽ đối chiếu đúng contract khi test)
-// =====================================================
 
 export const getDocumentsApi = async (
   params = {}
@@ -129,7 +127,6 @@ export const deleteDocumentApi = async (documentId) => {
 
 // GET DOCUMENT REVIEWS
 // GET /documents/:documentId/reviews
-// =====================================================
 
 export const getDocumentReviewsApi = async (
   documentId
@@ -142,10 +139,8 @@ export const getDocumentReviewsApi = async (
 };
 
 
-// =====================================================
 // CREATE DOCUMENT REVIEW
 // POST /documents/:documentId/reviews
-// =====================================================
 
 export const createDocumentReviewApi = async (
   documentId,
@@ -160,10 +155,8 @@ export const createDocumentReviewApi = async (
 };
 
 
-// =====================================================
 // UPDATE REVIEW
 // PATCH /reviews/:reviewId
-// =====================================================
 
 export const updateReviewApi = async (
   reviewId,
@@ -177,10 +170,8 @@ export const updateReviewApi = async (
   return response.data;
 };
 
-// =====================================================
 // DELETE REVIEW
 // DELETE /reviews/:reviewId
-// =====================================================
 
 export const deleteReviewApi = async (
   reviewId
