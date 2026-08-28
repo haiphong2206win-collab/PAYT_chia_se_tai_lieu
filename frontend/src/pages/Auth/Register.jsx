@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   User,
   Mail,
@@ -13,11 +13,14 @@ import {
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 
-import { registerApi } from '../../services/auth.api';
+import { registerApi, loginApi } from '../../services/auth.api';
 
 import './Auth.css';
 
 export const Register = () => {
+  // ROUTER
+  const navigate = useNavigate();
+
   // 1. FORM STATE
 
   const [fullName, setFullName] = useState('');
@@ -200,10 +203,24 @@ export const Register = () => {
         password: password,
       };
 
-
       // Gọi POST /auth/register
       const response =
         await registerApi(userData);
+
+      // Tự động đăng nhập sau khi đăng ký thành công
+      const loginResponse = await loginApi({
+        email: email.trim(),
+        password: password,
+      });
+
+      const userRole = String(
+        loginResponse?.user?.role || 'student'
+      ).toLowerCase();
+
+      sessionStorage.setItem(
+        'userRole',
+        userRole
+      );
 
       // Hiện message BE trả về
       setSuccessMessage(
@@ -211,12 +228,17 @@ export const Register = () => {
         'Account created successfully!'
       );
 
-      // Có thể reset form sau khi đăng ký thành công
-      setFullName('');
-      setEmail('');
       setPassword('');
-      setConfirmPassword('');
-      setAcceptTerms(false);
+
+      if (userRole === 'admin') {
+        navigate('/admin/documents', {
+          replace: true,
+        });
+      } else {
+        navigate('/', {
+          replace: true,
+        });
+      }
     } catch (error) {
       console.error(
         'Register API error:',

@@ -1,15 +1,56 @@
-import { useState } from 'react';
-import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Sun, Upload, User, LogIn, Menu, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Sun, Upload, User, LogIn, LogOut, Menu, X } from 'lucide-react';
 import Button from '../common/Button';
+import { logoutApi } from '../../services/auth.api';
+import { getUserProfileApi, clearUserProfileCache } from '../../services/user.api';
 import './Header.css';
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isProfileActive = location.pathname === '/profile';
   const isAuthActive = location.pathname === '/login' || location.pathname === '/register';
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkAuthStatus = async () => {
+      try {
+        await getUserProfileApi();
+        if (isMounted) {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setIsLoggedIn(false);
+        }
+      }
+    };
+
+    checkAuthStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [location.pathname]);
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      clearUserProfileCache();
+      sessionStorage.removeItem('userRole');
+      setIsLoggedIn(false);
+      setMobileMenuOpen(false);
+      navigate('/login');
+    }
+  };
 
   return (
     <header className="payt-header">
@@ -51,20 +92,33 @@ export const Header = () => {
 
         {/* Desktop Action Area */}
         <div className="payt-header-actions">
-          <Link to="/profile">
-            <Button
-              variant={isProfileActive ? 'primary' : 'secondary'}
-              size="sm"
-              icon={User}
-            >
-              Profile
-            </Button>
-          </Link>
-          <Link to="/login">
-            <Button variant={isAuthActive ? 'primary' : 'ghost'} size="sm" icon={LogIn}>
-              Login
-            </Button>
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <Link to="/profile">
+                <Button
+                  variant={isProfileActive ? 'primary' : 'secondary'}
+                  size="sm"
+                  icon={User}
+                >
+                  Profile
+                </Button>
+              </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={LogOut}
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            </>
+          ) : (
+            <Link to="/login">
+              <Button variant={isAuthActive ? 'primary' : 'ghost'} size="sm" icon={LogIn}>
+                Login
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile Toggle Button */}
@@ -102,20 +156,39 @@ export const Header = () => {
           >
             Upload Document
           </NavLink>
-          <NavLink
-            to="/profile"
-            className={({ isActive }) => `payt-mobile-link ${isActive ? 'active' : ''}`}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            My Profile
-          </NavLink>
-          <NavLink
-            to="/login"
-            className={({ isActive }) => `payt-mobile-link ${isActive ? 'active' : ''}`}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Login / Register
-          </NavLink>
+          {isLoggedIn ? (
+            <>
+              <NavLink
+                to="/profile"
+                className={({ isActive }) => `payt-mobile-link ${isActive ? 'active' : ''}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                My Profile
+              </NavLink>
+              <button
+                className="payt-mobile-link"
+                onClick={handleLogout}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  textAlign: 'left',
+                  width: '100%',
+                  cursor: 'pointer',
+                  font: 'inherit',
+                }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <NavLink
+              to="/login"
+              className={({ isActive }) => `payt-mobile-link ${isActive ? 'active' : ''}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Login / Register
+            </NavLink>
+          )}
         </div>
       )}
     </header>

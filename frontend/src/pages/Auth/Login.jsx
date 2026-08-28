@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Link,
   useNavigate,
+  useLocation,
 } from 'react-router-dom';
 
 import {
@@ -24,6 +25,7 @@ export const Login = () => {
   // ROUTER
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   // 1. FORM STATE
 
@@ -185,8 +187,13 @@ export const Login = () => {
       }
 
       // Student / user bình thường
-      // quay về Home.
-      navigate('/', {
+      // quay về trang yêu cầu hoặc Home.
+      const from =
+        location.state?.from?.pathname ||
+        location.state?.from ||
+        '/';
+
+      navigate(from, {
         replace: true,
       });
     } catch (error) {

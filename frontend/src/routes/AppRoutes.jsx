@@ -106,14 +106,18 @@ export const AppRoutes = () => {
         <Route
           path="/documents"
           element={
-            <DocumentList />
+            <ProtectedRoute>
+              <DocumentList />
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/documents/:id"
           element={
-            <DocumentDetail />
+            <ProtectedRoute>
+              <DocumentDetail />
+            </ProtectedRoute>
           }
         />
 
