@@ -1,5 +1,12 @@
-import { Download, Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
+import {
+  Download,
+  Bookmark,
+  BookmarkCheck,
+  Share2,
+} from 'lucide-react';
+
 import Button from '../../common/Button';
+import { formatFileType } from '../../../utils/formatters';
 
 export const DocumentActionsCard = ({
   document,
@@ -15,31 +22,63 @@ export const DocumentActionsCard = ({
     return null;
   }
 
+  // Chỉ format để hiển thị UI.
+  // Không thay đổi giá trị fileType thật lấy từ Backend.
+  const displayFileType = formatFileType(
+    document.fileType
+  );
+
   return (
     <div className="payt-card action-card">
-      <h3 className="action-card-title">Document Actions</h3>
+      <h3 className="action-card-title">
+        Document Actions
+      </h3>
 
       <div className="action-meta-summary">
+        {/* FILE FORMAT */}
         <div className="summary-row">
-          <span className="label">File Format:</span>
-          <span className="value">{document.fileType}</span>
-        </div>
+          <span className="label">
+            File Format:
+          </span>
 
-        <div className="summary-row">
-          <span className="label">File Size:</span>
-          <span className="value">{document.fileSize}</span>
-        </div>
-
-        <div className="summary-row">
-          <span className="label">Total Pages:</span>
           <span className="value">
-            {document.pages ? `${document.pages} Pages` : 'Not available'}
+            {displayFileType}
           </span>
         </div>
 
+        {/* FILE SIZE */}
         <div className="summary-row">
-          <span className="label">Status:</span>
-          <span className="value">{document.status}</span>
+          <span className="label">
+            File Size:
+          </span>
+
+          <span className="value">
+            {document.fileSize}
+          </span>
+        </div>
+
+        {/* TOTAL PAGES */}
+        <div className="summary-row">
+          <span className="label">
+            Total Pages:
+          </span>
+
+          <span className="value">
+            {document.pages
+              ? `${document.pages} Pages`
+              : 'Not available'}
+          </span>
+        </div>
+
+        {/* STATUS */}
+        <div className="summary-row">
+          <span className="label">
+            Status:
+          </span>
+
+          <span className="value">
+            {document.status}
+          </span>
         </div>
       </div>
 
@@ -55,7 +94,9 @@ export const DocumentActionsCard = ({
           onClick={handleDownloadClick}
           disabled={isDownloading}
         >
-          {isDownloading ? 'Preparing...' : 'Download Document'}
+          {isDownloading
+            ? 'Preparing...'
+            : 'Download Document'}
         </Button>
 
         {/* SAVE */}
@@ -65,16 +106,19 @@ export const DocumentActionsCard = ({
           fullWidth
           icon={isSaved ? BookmarkCheck : Bookmark}
           loading={isSavingLibrary}
-          disabled={isSavingLibrary || isCheckingSaved}
+          disabled={
+            isSavingLibrary ||
+            isCheckingSaved
+          }
           onClick={handleSaveLibrary}
         >
           {isCheckingSaved
             ? 'Checking...'
             : isSavingLibrary
-            ? 'Saving...'
-            : isSaved
-            ? 'Saved in Library'
-            : 'Save to Library'}
+              ? 'Saving...'
+              : isSaved
+                ? 'Saved in Library'
+                : 'Save to Library'}
         </Button>
       </div>
 
